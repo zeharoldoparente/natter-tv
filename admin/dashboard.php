@@ -7,11 +7,9 @@ if (!isset($_SESSION['logado'])) {
 include "../includes/db.php";
 include "../includes/functions.php";
 
-// Processar exclusão de arquivo se requisitado
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $id = (int)$_GET['delete'];
 
-   // Buscar o arquivo para deletar fisicamente
    $stmt = $conn->prepare("SELECT arquivo FROM conteudos WHERE id = ?");
    $stmt->bind_param("i", $id);
    $stmt->execute();
@@ -20,10 +18,9 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    if ($row = $result->fetch_assoc()) {
       $arquivo_path = "../uploads/" . $row['arquivo'];
       if (file_exists($arquivo_path)) {
-         unlink($arquivo_path); // Deleta o arquivo físico
+         unlink($arquivo_path);
       }
 
-      // Deleta o registro do banco
       $stmt = $conn->prepare("DELETE FROM conteudos WHERE id = ?");
       $stmt->bind_param("i", $id);
       $stmt->execute();
@@ -32,9 +29,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    }
 }
 
-// Atualizar TV (força refresh na página da TV)
 if (isset($_POST['atualizar_tv'])) {
-   // Cria um arquivo de sinal para a TV detectar
    file_put_contents("../temp/tv_update.txt", time());
    $mensagem = "Sinal de atualização enviado para as TVs!";
 }
@@ -79,7 +74,6 @@ if (isset($_POST['atualizar_tv'])) {
             </div>
          <?php endif; ?>
 
-         <!-- Controles da TV -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-broadcast-tower"></i> Controle da TV</h3>
@@ -96,7 +90,6 @@ if (isset($_POST['atualizar_tv'])) {
             </div>
          </div>
 
-         <!-- Upload de novos arquivos -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo</h3>
@@ -119,7 +112,6 @@ if (isset($_POST['atualizar_tv'])) {
             </div>
          </div>
 
-         <!-- Lista de conteúdos -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Conteúdos Ativos</h3>
