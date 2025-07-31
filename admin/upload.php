@@ -62,16 +62,17 @@ try {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Upload de Arquivos - TV Corporativa</title>
+   <title>Upload de Arquivos - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+   <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
 </head>
 
 <body>
    <nav class="sidebar">
       <div class="sidebar-header">
-         <i class="fas fa-tv"></i>
-         <h2>TV Corporativa</h2>
+         <img class="img-sync" src="../assets/images/Natter Logo.PNG" alt="">
+         <h2>NatterTV</h2>
       </div>
       <ul class="sidebar-menu">
          <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
@@ -283,7 +284,7 @@ try {
          display: flex;
          align-items: center;
          justify-content: center;
-         background: var(--primary-color);
+         background: var(--green-color);
          color: white;
          font-size: 1.5rem;
       }
@@ -292,7 +293,7 @@ try {
          margin: 0;
          font-size: 1.8rem;
          font-weight: 600;
-         color: var(--primary-color);
+         color: var(--green-color);
       }
 
       .stat-info p {

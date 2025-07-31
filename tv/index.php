@@ -1,14 +1,12 @@
 <?php
 include "../includes/db.php";
 
-// Buscar todos os conteúdos ativos
 $res = $conn->query("SELECT * FROM conteudos ORDER BY id ASC");
 $conteudos = [];
 while ($row = $res->fetch_assoc()) {
    $conteudos[] = $row;
 }
 
-// Se não há conteúdos, mostrar tela padrão
 if (empty($conteudos)) {
    $conteudos = [
       [
@@ -30,18 +28,17 @@ if (empty($conteudos)) {
    <title>TV Corporativa</title>
    <link rel="stylesheet" href="../assets/css/tv-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+   <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
 </head>
 
 <body>
-   <!-- Tela principal de conteúdo -->
    <div id="conteudo-principal">
       <div id="media-container"></div>
 
-      <!-- Overlay com informações (opcional) -->
       <div id="overlay-info">
          <div class="empresa-logo">
-            <i class="fas fa-building"></i>
-            <span>TV Corporativa</span>
+            <img class="tt-logo" src="../assets/images/tt Logo.png" alt="">
+            <span>NatterTV</span>
          </div>
          <div class="data-hora">
             <div id="horario"></div>
@@ -49,18 +46,16 @@ if (empty($conteudos)) {
          </div>
       </div>
 
-      <!-- Loading indicator -->
       <div id="loading" class="hidden">
          <i class="fas fa-spinner fa-spin"></i>
          <p>Carregando conteúdo...</p>
       </div>
    </div>
 
-   <!-- Tela de erro/sem conteúdo -->
    <div id="tela-sem-conteudo" class="hidden">
       <div class="sem-conteudo">
          <i class="fas fa-tv"></i>
-         <h2>TV Corporativa</h2>
+         <h2>NatterTV</h2>
          <p>Aguardando conteúdo...</p>
          <div class="loading-dots">
             <span></span>
@@ -71,60 +66,42 @@ if (empty($conteudos)) {
    </div>
 
    <script>
-      // Configurações da TV
       const CONFIG = {
-         // Verificar atualizações a cada 30 segundos
          updateInterval: 30000,
-         // Mostrar overlay de informações
          showOverlay: true,
-         // Transições suaves entre conteúdos
          fadeTransition: true,
-         // Debug mode (define como false em produção)
          debug: false
       };
 
-      // Dados dos conteúdos vindos do PHP
       let conteudos = <?php echo json_encode($conteudos); ?>;
       let currentIndex = 0;
       let isPlaying = false;
       let updateTimer = null;
       let contentTimer = null;
 
-      // Inicializar TV quando página carregar
       document.addEventListener('DOMContentLoaded', function() {
          initializeTV();
       });
 
-      /**
-       * Inicializar sistema da TV
-       */
       function initializeTV() {
          log('Inicializando TV Corporativa...');
 
-         // Configurar relógio
          updateDateTime();
          setInterval(updateDateTime, 1000);
 
-         // Verificar se há conteúdos
          if (conteudos.length === 0 || conteudos[0].id === 0) {
             showNoContentScreen();
          } else {
-            // Iniciar reprodução
             startPlayback();
          }
 
-         // Configurar verificação de atualizações
          setupUpdateChecker();
 
-         // Configurar eventos de teclado para controle
          setupKeyboardControls();
 
          log('TV inicializada com sucesso');
       }
 
-      /**
-       * Iniciar reprodução de conteúdos
-       */
       function startPlayback() {
          if (conteudos.length === 0) {
             showNoContentScreen();
@@ -136,9 +113,6 @@ if (empty($conteudos)) {
          isPlaying = true;
       }
 
-      /**
-       * Mostrar conteúdo atual
-       */
       function showContent() {
          const content = conteudos[currentIndex];
          const container = document.getElementById('media-container');
@@ -150,10 +124,7 @@ if (empty($conteudos)) {
 
          log(`Mostrando conteúdo: ${content.arquivo} (${content.tipo})`);
 
-         // Limpar conteúdo anterior
          container.innerHTML = '';
-
-         // Mostrar loading
          showLoading();
 
          if (content.tipo === 'imagem') {
@@ -163,9 +134,6 @@ if (empty($conteudos)) {
          }
       }
 
-      /**
-       * Mostrar imagem
-       */
       function showImage(content) {
          const img = document.createElement('img');
          img.src = `../uploads/${content.arquivo}`;
@@ -179,15 +147,12 @@ if (empty($conteudos)) {
                img.style.opacity = '0';
                container.appendChild(img);
 
-               // Fade in
                setTimeout(() => {
                   img.style.opacity = '1';
                }, 100);
             } else {
                container.appendChild(img);
             }
-
-            // Programar próximo conteúdo
             const duration = content.duracao * 1000;
             contentTimer = setTimeout(nextContent, duration);
 
@@ -201,14 +166,11 @@ if (empty($conteudos)) {
          };
       }
 
-      /**
-       * Mostrar vídeo
-       */
       function showVideo(content) {
          const video = document.createElement('video');
          video.src = `../uploads/${content.arquivo}`;
          video.autoplay = true;
-         video.muted = true; // Importante para autoplay funcionar
+         video.muted = true;
 
          video.onloadeddata = function() {
             const container = document.getElementById('media-container');
@@ -217,8 +179,6 @@ if (empty($conteudos)) {
             if (CONFIG.fadeTransition) {
                video.style.opacity = '0';
                container.appendChild(video);
-
-               // Fade in
                setTimeout(() => {
                   video.style.opacity = '1';
                }, 100);
@@ -241,40 +201,25 @@ if (empty($conteudos)) {
          };
       }
 
-      /**
-       * Avançar para próximo conteúdo
-       */
       function nextContent() {
-         // Limpar timer atual
          if (contentTimer) {
             clearTimeout(contentTimer);
             contentTimer = null;
          }
-
-         // Avançar índice
          currentIndex = (currentIndex + 1) % conteudos.length;
 
          log(`Avançando para conteúdo ${currentIndex + 1} de ${conteudos.length}`);
 
-         // Mostrar próximo conteúdo após pequeno delay
          setTimeout(showContent, 500);
       }
 
-      /**
-       * Configurar verificação de atualizações
-       */
       function setupUpdateChecker() {
          updateTimer = setInterval(checkForUpdates, CONFIG.updateInterval);
          log(`Verificação de atualizações configurada para cada ${CONFIG.updateInterval/1000} segundos`);
       }
 
-      /**
-       * Verificar se há atualizações de conteúdo
-       */
       function checkForUpdates() {
          log('Verificando atualizações...');
-
-         // Verificar arquivo de sinal de update
          fetch('../temp/tv_update.txt', {
                cache: 'no-cache',
                headers: {
@@ -293,22 +238,16 @@ if (empty($conteudos)) {
                if (timestamp !== lastUpdate) {
                   log('Atualização detectada! Recarregando...');
                   localStorage.setItem('last_tv_update', timestamp);
-
-                  // Recarregar página após 2 segundos
                   setTimeout(() => {
                      window.location.reload();
                   }, 2000);
                }
             })
             .catch(error => {
-               // Arquivo não existe, fazer verificação por AJAX
                checkContentUpdates();
             });
       }
 
-      /**
-       * Verificar atualizações via AJAX
-       */
       function checkContentUpdates() {
          fetch('get_contents.php', {
                cache: 'no-cache',
@@ -318,12 +257,10 @@ if (empty($conteudos)) {
             })
             .then(response => response.json())
             .then(newContents => {
-               // Comparar com conteúdos atuais
                if (JSON.stringify(newContents) !== JSON.stringify(conteudos)) {
                   log('Novos conteúdos detectados! Atualizando...');
                   conteudos = newContents;
 
-                  // Se não estava reproduzindo, iniciar
                   if (!isPlaying) {
                      startPlayback();
                   }
@@ -334,9 +271,6 @@ if (empty($conteudos)) {
             });
       }
 
-      /**
-       * Mostrar/esconder tela de loading
-       */
       function showLoading() {
          document.getElementById('loading').classList.remove('hidden');
       }
@@ -345,9 +279,6 @@ if (empty($conteudos)) {
          document.getElementById('loading').classList.add('hidden');
       }
 
-      /**
-       * Mostrar tela sem conteúdo
-       */
       function showNoContentScreen() {
          document.getElementById('conteudo-principal').classList.add('hidden');
          document.getElementById('tela-sem-conteudo').classList.remove('hidden');
@@ -361,9 +292,6 @@ if (empty($conteudos)) {
          document.getElementById('tela-sem-conteudo').classList.add('hidden');
       }
 
-      /**
-       * Atualizar data e hora
-       */
       function updateDateTime() {
          const now = new Date();
 
@@ -388,29 +316,23 @@ if (empty($conteudos)) {
             now.toLocaleDateString('pt-BR', dateOptions);
       }
 
-      /**
-       * Configurar controles de teclado
-       */
       function setupKeyboardControls() {
          document.addEventListener('keydown', function(e) {
             switch (e.key) {
                case 'ArrowRight':
-               case ' ': // Espaço
+               case ' ':
                   nextContent();
                   break;
                case 'ArrowLeft':
-                  // Voltar conteúdo anterior
                   currentIndex = currentIndex > 0 ? currentIndex - 1 : conteudos.length - 1;
                   showContent();
                   break;
                case 'r':
                case 'R':
-                  // Recarregar
                   window.location.reload();
                   break;
                case 'f':
                case 'F':
-                  // Fullscreen
                   if (document.fullscreenElement) {
                      document.exitFullscreen();
                   } else {
@@ -421,16 +343,12 @@ if (empty($conteudos)) {
          });
       }
 
-      /**
-       * Função de log para debug
-       */
       function log(message) {
          if (CONFIG.debug) {
             console.log(`[TV] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
 
-      // Configurar fullscreen automático (opcional)
       document.addEventListener('click', function() {
          if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {

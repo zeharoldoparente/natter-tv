@@ -10,6 +10,7 @@ function initializeUpload() {
    fileInput.addEventListener("change", handleFileSelect);
    uploadForm.addEventListener("submit", handleFormSubmit);
 }
+
 function setupDragAndDrop(dropZone, fileInput) {
    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       dropZone.addEventListener(eventName, preventDefaults, false);
@@ -47,6 +48,7 @@ function setupDragAndDrop(dropZone, fileInput) {
       }
    }
 }
+
 function handleFileSelect(e) {
    const file = e.target.files[0];
 
@@ -60,6 +62,7 @@ function handleFileSelect(e) {
    showFilePreview(file);
    adjustFormFields(file);
 }
+
 function validateFile(file) {
    const maxSize = 52428800;
    const allowedTypes = [
@@ -72,11 +75,13 @@ function validateFile(file) {
       "video/mov",
       "video/wmv",
    ];
+
    if (file.size > maxSize) {
       showAlert("Arquivo muito grande! Máximo permitido: 50MB", "error");
       resetFileInput();
       return false;
    }
+
    if (!allowedTypes.includes(file.type)) {
       showAlert("Tipo de arquivo não permitido!", "error");
       resetFileInput();
@@ -85,16 +90,19 @@ function validateFile(file) {
 
    return true;
 }
+
 function showFilePreview(file) {
    const preview = document.getElementById("filePreview");
    const mediaContainer = preview.querySelector(".preview-media");
    const fileName = document.getElementById("fileName");
    const fileSize = document.getElementById("fileSize");
    const fileType = document.getElementById("fileType");
+
    mediaContainer.innerHTML = "";
    fileName.textContent = file.name;
    fileSize.textContent = formatFileSize(file.size);
    fileType.textContent = getFileTypeLabel(file.type);
+
    const reader = new FileReader();
 
    reader.onload = function (e) {
@@ -118,10 +126,12 @@ function showFilePreview(file) {
    reader.readAsDataURL(file);
    preview.classList.remove("hidden");
 }
+
 function hideFilePreview() {
    const preview = document.getElementById("filePreview");
    preview.classList.add("hidden");
 }
+
 function adjustFormFields(file) {
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
@@ -129,13 +139,17 @@ function adjustFormFields(file) {
    if (file.type.startsWith("video/")) {
       durationGroup.style.display = "none";
       durationInput.value = 0;
+      durationInput.removeAttribute("required");
+      durationInput.disabled = true;
    } else {
       durationGroup.style.display = "flex";
+      durationInput.disabled = false;
       if (durationInput.value == 0) {
          durationInput.value = 5;
       }
    }
 }
+
 function handleFormSubmit(e) {
    e.preventDefault();
 
@@ -152,6 +166,7 @@ function handleFormSubmit(e) {
    submitBtn.disabled = true;
    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
    progressContainer.classList.remove("hidden");
+
    const xhr = new XMLHttpRequest();
 
    xhr.upload.addEventListener("progress", function (e) {
@@ -160,6 +175,7 @@ function handleFormSubmit(e) {
          updateProgress(percentComplete);
       }
    });
+
    xhr.addEventListener("load", function () {
       if (xhr.status === 200) {
          showAlert("Arquivo enviado com sucesso!", "success");
@@ -173,6 +189,7 @@ function handleFormSubmit(e) {
 
       resetUploadState();
    });
+
    xhr.addEventListener("error", function () {
       showAlert("Erro de conexão ao enviar arquivo", "error");
       resetUploadState();
@@ -206,25 +223,35 @@ function removeFile() {
    hideFilePreview();
 
    const durationGroup = document.getElementById("durationGroup");
+   const durationInput = document.getElementById("duracao");
+
    durationGroup.style.display = "flex";
-   document.getElementById("duracao").value = 5;
+   durationInput.disabled = false;
+   durationInput.value = 5;
 }
+
 function resetFileInput() {
    const fileInput = document.getElementById("arquivo");
    fileInput.value = "";
 }
+
 function resetForm() {
    document.getElementById("uploadForm").reset();
    hideFilePreview();
    resetFileInput();
 
    const durationGroup = document.getElementById("durationGroup");
+   const durationInput = document.getElementById("duracao");
+
    durationGroup.style.display = "flex";
-   document.getElementById("duracao").value = 5;
+   durationInput.disabled = false;
+   durationInput.value = 5;
 }
+
 function showAlert(message, type = "info") {
    const existingAlerts = document.querySelectorAll(".alert-dynamic");
    existingAlerts.forEach((alert) => alert.remove());
+
    const alert = document.createElement("div");
    alert.className = `alert alert-${type} alert-dynamic`;
 
@@ -241,6 +268,7 @@ function showAlert(message, type = "info") {
             <i class="fas fa-times"></i>
         </button>
     `;
+
    const content = document.querySelector(".content");
    content.insertBefore(alert, content.firstChild);
 
@@ -250,6 +278,7 @@ function showAlert(message, type = "info") {
       }
    }, 5000);
 }
+
 function formatFileSize(bytes) {
    if (bytes === 0) return "0 Bytes";
 
@@ -259,6 +288,7 @@ function formatFileSize(bytes) {
 
    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
+
 function getFileTypeLabel(mimeType) {
    if (mimeType.startsWith("image/")) {
       return "Imagem";
@@ -268,6 +298,7 @@ function getFileTypeLabel(mimeType) {
 
    return "Arquivo";
 }
+
 const additionalCSS = `
 .alert-dynamic {
     position: relative;
@@ -302,6 +333,6 @@ const additionalCSS = `
     }
 }
 `;
+
 const style = document.createElement("style");
-style.textContent = additionalCSS;
-document.head.appendChild(style);
+style.textContent = additionalCS;

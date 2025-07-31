@@ -1,5 +1,6 @@
 :root {
-   --primary-color: #2c3e50;
+   --primary-color: #f07d00;
+   --green-color: #166353;
    --secondary-color: #3498db;
    --success-color: #27ae60;
    --warning-color: #f39c12;
@@ -30,7 +31,12 @@ body {
    left: 0;
    width: var(--sidebar-width);
    height: 100vh;
-   background: linear-gradient(135deg, var(--primary-color), #34495e);
+   background: var(--green-color);
+   /* background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--warning-color)
+   ); */
    color: white;
    z-index: 1000;
    transition: all 0.3s ease;
@@ -136,9 +142,17 @@ body {
    transform: translateY(-2px);
    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
+.img-sync {
+   width: 225px;
+}
 
 .card-header {
-   background: linear-gradient(135deg, var(--primary-color), #34495e);
+   background: var(--green-color);
+   /* background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--warning-color)
+   ); */
    color: white;
    padding: 20px 25px;
    border-bottom: 1px solid #eee;
@@ -277,7 +291,7 @@ body {
 }
 
 .content-table th {
-   background: var(--primary-color);
+   background: var(--green-color);
    color: white;
    padding: 15px 12px;
    text-align: left;
