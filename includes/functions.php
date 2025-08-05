@@ -73,7 +73,7 @@ function fazerLogout()
    header("Location: index.php");
    exit;
 }
-function processarUpload($arquivo, $duracao = 5)
+function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
 {
    global $conn;
 
@@ -87,12 +87,21 @@ function processarUpload($arquivo, $duracao = 5)
    if ($tipo === 'desconhecido') {
       throw new Exception('Tipo de arquivo não permitido');
    }
+
+   // Validar e limpar código do canal
+   $codigo_canal = strtoupper(trim($codigo_canal));
+   if (empty($codigo_canal) || !preg_match('/^[A-Z0-9]{1,10}$/', $codigo_canal)) {
+      $codigo_canal = '0000'; // Código padrão se inválido
+   }
+
    $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
    $nomeArquivo = time() . '_' . uniqid() . '.' . $extensao;
    $caminhoCompleto = UPLOAD_PATH . $nomeArquivo;
+
    if (!move_uploaded_file($arquivo['tmp_name'], $caminhoCompleto)) {
       throw new Exception('Erro ao salvar arquivo');
    }
+
    $dimensoes = '';
    if ($tipo === 'imagem') {
       $info = getimagesize($caminhoCompleto);
@@ -100,19 +109,22 @@ function processarUpload($arquivo, $duracao = 5)
          $dimensoes = $info[0] . 'x' . $info[1];
       }
    }
+
    $usuarioId = $_SESSION['usuario_id'] ?? null;
 
+   // MODIFICADO: Incluir código_canal na inserção
    $stmt = $conn->prepare("
         INSERT INTO conteudos 
-        (arquivo, nome_original, tipo, duracao, tamanho, dimensoes, usuario_upload) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (arquivo, nome_original, tipo, codigo_canal, duracao, tamanho, dimensoes, usuario_upload) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
    $stmt->bind_param(
-      "sssisis",
+      "ssssisis",
       $nomeArquivo,
       $arquivo['name'],
       $tipo,
+      $codigo_canal,
       $duracao,
       $arquivo['size'],
       $dimensoes,
@@ -126,7 +138,8 @@ function processarUpload($arquivo, $duracao = 5)
 
    $conteudoId = $conn->insert_id;
    $stmt->close();
-   registrarLog('upload', "Upload do arquivo: {$arquivo['name']} ({$tipo})");
+
+   registrarLog('upload', "Upload do arquivo: {$arquivo['name']} ({$tipo}) - Canal: {$codigo_canal}");
 
    return $conteudoId;
 }

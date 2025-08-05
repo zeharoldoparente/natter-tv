@@ -1,12 +1,44 @@
 <?php
 include "../includes/db.php";
 
-$res = $conn->query("SELECT * FROM conteudos ORDER BY id ASC");
-$conteudos = [];
-while ($row = $res->fetch_assoc()) {
-   $conteudos[] = $row;
+// Verificar se foi passado um código de canal
+$codigo_canal = '';
+if (isset($_GET['canal']) && !empty($_GET['canal'])) {
+   $codigo_canal = strtoupper(trim($_GET['canal']));
+   // Validar formato do código
+   if (!preg_match('/^[A-Z0-9]{1,10}$/', $codigo_canal)) {
+      $codigo_canal = '';
+   }
 }
 
+// Se não tem código, mostrar tela de seleção
+if (empty($codigo_canal)) {
+   // Buscar canais disponíveis
+   $canais_disponiveis = [];
+   $res = $conn->query("SELECT DISTINCT codigo_canal, COUNT(*) as total_conteudos FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
+   if ($res) {
+      while ($row = $res->fetch_assoc()) {
+         $canais_disponiveis[] = $row;
+      }
+   }
+
+   include 'selecionar_canal.php';
+   exit;
+}
+
+// Buscar conteúdos do canal específico
+$stmt = $conn->prepare("SELECT * FROM conteudos WHERE codigo_canal = ? AND ativo = 1 ORDER BY ordem_exibicao ASC, id ASC");
+$stmt->bind_param("s", $codigo_canal);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$conteudos = [];
+while ($row = $result->fetch_assoc()) {
+   $conteudos[] = $row;
+}
+$stmt->close();
+
+// Se não há conteúdos para este canal, usar conteúdo padrão
 if (empty($conteudos)) {
    $conteudos = [
       [
@@ -14,6 +46,7 @@ if (empty($conteudos)) {
          'arquivo' => 'default.jpg',
          'tipo' => 'imagem',
          'duracao' => 10,
+         'codigo_canal' => $codigo_canal,
          'data_upload' => date('Y-m-d H:i:s')
       ]
    ];
@@ -25,7 +58,7 @@ if (empty($conteudos)) {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>TV Corporativa</title>
+   <title>TV Corporativa - Canal <?php echo htmlspecialchars($codigo_canal); ?></title>
    <link rel="stylesheet" href="../assets/css/tv-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
@@ -38,7 +71,7 @@ if (empty($conteudos)) {
       <div id="overlay-info">
          <div class="empresa-logo">
             <img class="tt-logo" src="../assets/images/tt Logo.png" alt="">
-            <span>NatterTV</span>
+            <span>NatterTV - Canal <?php echo htmlspecialchars($codigo_canal); ?></span>
          </div>
          <div class="data-hora">
             <div id="horario"></div>
@@ -55,12 +88,15 @@ if (empty($conteudos)) {
    <div id="tela-sem-conteudo" class="hidden">
       <div class="sem-conteudo">
          <i class="fas fa-tv"></i>
-         <h2>NatterTV</h2>
-         <p>Aguardando conteúdo...</p>
+         <h2>NatterTV - Canal <?php echo htmlspecialchars($codigo_canal); ?></h2>
+         <p>Aguardando conteúdo para este canal...</p>
          <div class="loading-dots">
             <span></span>
             <span></span>
             <span></span>
+         </div>
+         <div class="canal-info">
+            <p><small>Pressione 'C' para trocar de canal</small></p>
          </div>
       </div>
    </div>
@@ -70,7 +106,8 @@ if (empty($conteudos)) {
          updateInterval: 30000,
          showOverlay: true,
          fadeTransition: true,
-         debug: false
+         debug: false,
+         canalAtual: '<?php echo $codigo_canal; ?>'
       };
 
       let conteudos = <?php echo json_encode($conteudos); ?>;
@@ -84,7 +121,7 @@ if (empty($conteudos)) {
       });
 
       function initializeTV() {
-         log('Inicializando TV Corporativa...');
+         log('Inicializando TV Corporativa - Canal: ' + CONFIG.canalAtual);
 
          updateDateTime();
          setInterval(updateDateTime, 1000);
@@ -96,10 +133,9 @@ if (empty($conteudos)) {
          }
 
          setupUpdateChecker();
-
          setupKeyboardControls();
 
-         log('TV inicializada com sucesso');
+         log('TV inicializada com sucesso para o canal ' + CONFIG.canalAtual);
       }
 
       function startPlayback() {
@@ -122,7 +158,7 @@ if (empty($conteudos)) {
             return;
          }
 
-         log(`Mostrando conteúdo: ${content.arquivo} (${content.tipo})`);
+         log(`Mostrando conteúdo: ${content.arquivo} (${content.tipo}) - Canal: ${CONFIG.canalAtual}`);
 
          container.innerHTML = '';
          showLoading();
@@ -219,7 +255,9 @@ if (empty($conteudos)) {
       }
 
       function checkForUpdates() {
-         log('Verificando atualizações...');
+         log('Verificando atualizações para canal ' + CONFIG.canalAtual + '...');
+
+         // Verificar arquivo de atualização geral
          fetch('../temp/tv_update.txt', {
                cache: 'no-cache',
                headers: {
@@ -233,11 +271,11 @@ if (empty($conteudos)) {
                throw new Error('Arquivo de update não encontrado');
             })
             .then(timestamp => {
-               const lastUpdate = localStorage.getItem('last_tv_update') || '0';
+               const lastUpdate = localStorage.getItem('last_tv_update_' + CONFIG.canalAtual) || '0';
 
                if (timestamp !== lastUpdate) {
                   log('Atualização detectada! Recarregando...');
-                  localStorage.setItem('last_tv_update', timestamp);
+                  localStorage.setItem('last_tv_update_' + CONFIG.canalAtual, timestamp);
                   setTimeout(() => {
                      window.location.reload();
                   }, 2000);
@@ -249,7 +287,7 @@ if (empty($conteudos)) {
       }
 
       function checkContentUpdates() {
-         fetch('get_contents.php', {
+         fetch(`get_contents.php?canal=${CONFIG.canalAtual}`, {
                cache: 'no-cache',
                headers: {
                   'Cache-Control': 'no-cache'
@@ -258,7 +296,7 @@ if (empty($conteudos)) {
             .then(response => response.json())
             .then(newContents => {
                if (JSON.stringify(newContents) !== JSON.stringify(conteudos)) {
-                  log('Novos conteúdos detectados! Atualizando...');
+                  log('Novos conteúdos detectados para canal ' + CONFIG.canalAtual + '! Atualizando...');
                   conteudos = newContents;
 
                   if (!isPlaying) {
@@ -284,7 +322,7 @@ if (empty($conteudos)) {
          document.getElementById('tela-sem-conteudo').classList.remove('hidden');
          isPlaying = false;
 
-         log('Exibindo tela de sem conteúdo');
+         log('Exibindo tela de sem conteúdo para canal ' + CONFIG.canalAtual);
       }
 
       function hideNoContentScreen() {
@@ -331,6 +369,11 @@ if (empty($conteudos)) {
                case 'R':
                   window.location.reload();
                   break;
+               case 'c':
+               case 'C':
+                  // Trocar canal - voltar para seleção
+                  window.location.href = 'index.php';
+                  break;
                case 'f':
                case 'F':
                   if (document.fullscreenElement) {
@@ -345,10 +388,11 @@ if (empty($conteudos)) {
 
       function log(message) {
          if (CONFIG.debug) {
-            console.log(`[TV] ${new Date().toLocaleTimeString()}: ${message}`);
+            console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
 
+      // Auto fullscreen ao clicar
       document.addEventListener('click', function() {
          if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
@@ -357,6 +401,18 @@ if (empty($conteudos)) {
          }
       });
    </script>
+
+   <style>
+      .canal-info {
+         margin-top: 30px;
+         text-align: center;
+      }
+
+      .canal-info p {
+         opacity: 0.6;
+         font-size: 0.9rem;
+      }
+   </style>
 </body>
 
 </html>

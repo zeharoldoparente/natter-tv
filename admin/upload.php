@@ -20,11 +20,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
       $duracao = (int)$_POST['duracao'] ?? 5;
       $duracao = max(1, min(300, $duracao));
 
-      $conteudoId = processarUpload($_FILES['arquivo'], $duracao);
+      // NOVO: Capturar o código do canal
+      $codigo_canal = sanitizarEntrada($_POST['codigo_canal'] ?? '0000');
+      if (empty($codigo_canal)) {
+         $codigo_canal = '0000';
+      }
+
+      $conteudoId = processarUpload($_FILES['arquivo'], $duracao, $codigo_canal);
 
       if ($conteudoId) {
-         $mensagem = "Arquivo enviado com sucesso!";
-
+         $mensagem = "Arquivo enviado com sucesso para o canal {$codigo_canal}!";
          sinalizarAtualizacaoTV();
       }
    } catch (Exception $e) {
@@ -32,28 +37,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
    }
 }
 
-$stats = [
-   'total_arquivos' => 0,
-   'total_imagens' => 0,
-   'total_videos' => 0,
-   'espaco_usado' => 0
-];
-
+// Buscar estatísticas por canal
+$stats = [];
 try {
    $statsQuery = $conn->query("
         SELECT 
+            codigo_canal,
             COUNT(*) as total_arquivos,
             SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens,
             SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos,
             SUM(tamanho) as espaco_usado
         FROM conteudos 
         WHERE ativo = 1
+        GROUP BY codigo_canal
+        ORDER BY codigo_canal
     ");
 
-   if ($statsQuery && $row = $statsQuery->fetch_assoc()) {
-      $stats = $row;
+   if ($statsQuery) {
+      while ($row = $statsQuery->fetch_assoc()) {
+         $stats[] = $row;
+      }
    }
 } catch (Exception $e) {
+   // Se der erro, manter array vazio
 }
 ?>
 <!DOCTYPE html>
@@ -103,47 +109,31 @@ try {
             </div>
          <?php endif; ?>
 
-         <div class="stats-grid">
-            <div class="stat-card">
-               <div class="stat-icon">
-                  <i class="fas fa-file"></i>
+         <!-- NOVO: Estatísticas por Canal -->
+         <?php if (!empty($stats)): ?>
+            <div class="card">
+               <div class="card-header">
+                  <h3><i class="fas fa-chart-bar"></i> Estatísticas por Canal</h3>
                </div>
-               <div class="stat-info">
-                  <h3><?php echo number_format($stats['total_arquivos']); ?></h3>
-                  <p>Total de Arquivos</p>
-               </div>
-            </div>
-
-            <div class="stat-card">
-               <div class="stat-icon">
-                  <i class="fas fa-image"></i>
-               </div>
-               <div class="stat-info">
-                  <h3><?php echo number_format($stats['total_imagens']); ?></h3>
-                  <p>Imagens</p>
-               </div>
-            </div>
-
-            <div class="stat-card">
-               <div class="stat-icon">
-                  <i class="fas fa-video"></i>
-               </div>
-               <div class="stat-info">
-                  <h3><?php echo number_format($stats['total_videos']); ?></h3>
-                  <p>Vídeos</p>
+               <div class="card-body">
+                  <div class="channels-stats">
+                     <?php foreach ($stats as $stat): ?>
+                        <div class="channel-stat">
+                           <div class="channel-header">
+                              <h4>Canal: <?php echo $stat['codigo_canal']; ?></h4>
+                           </div>
+                           <div class="channel-info">
+                              <span><i class="fas fa-file"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
+                              <span><i class="fas fa-image"></i> <?php echo $stat['total_imagens']; ?> imagens</span>
+                              <span><i class="fas fa-video"></i> <?php echo $stat['total_videos']; ?> vídeos</span>
+                              <span><i class="fas fa-hdd"></i> <?php echo formatFileSize($stat['espaco_usado']); ?></span>
+                           </div>
+                        </div>
+                     <?php endforeach; ?>
+                  </div>
                </div>
             </div>
-
-            <div class="stat-card">
-               <div class="stat-icon">
-                  <i class="fas fa-hdd"></i>
-               </div>
-               <div class="stat-info">
-                  <h3><?php echo formatFileSize($stats['espaco_usado']); ?></h3>
-                  <p>Espaço Usado</p>
-               </div>
-            </div>
-         </div>
+         <?php endif; ?>
 
          <div class="card">
             <div class="card-header">
@@ -152,6 +142,18 @@ try {
             <div class="card-body">
                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
+
+                  <!-- NOVO: Campo para código do canal -->
+                  <div class="form-group">
+                     <label for="codigo_canal">
+                        <i class="fas fa-tv"></i>
+                        Código do Canal
+                     </label>
+                     <input type="text" name="codigo_canal" id="codigo_canal"
+                        placeholder="Ex: 1234" maxlength="10" required
+                        pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
+                     <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
+                  </div>
 
                   <div class="drop-zone" id="dropZone">
                      <div class="drop-zone-content">
@@ -217,6 +219,14 @@ try {
             <div class="card-body">
                <div class="instructions">
                   <div class="instruction-item">
+                     <i class="fas fa-tv text-success"></i>
+                     <div>
+                        <h5>Códigos de Canal</h5>
+                        <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
+                     </div>
+                  </div>
+
+                  <div class="instruction-item">
                      <i class="fas fa-image text-info"></i>
                      <div>
                         <h5>Imagens</h5>
@@ -233,18 +243,10 @@ try {
                   </div>
 
                   <div class="instruction-item">
-                     <i class="fas fa-file-upload text-success"></i>
+                     <i class="fas fa-desktop text-primary"></i>
                      <div>
-                        <h5>Upload</h5>
-                        <p>Arraste e solte arquivos na área de upload ou clique para selecionar</p>
-                     </div>
-                  </div>
-
-                  <div class="instruction-item">
-                     <i class="fas fa-tv text-primary"></i>
-                     <div>
-                        <h5>Visualização</h5>
-                        <p>Após o upload, os arquivos aparecerão automaticamente na TV</p>
+                        <h5>Visualização na TV</h5>
+                        <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
                      </div>
                   </div>
                </div>
@@ -254,6 +256,50 @@ try {
    </main>
 
    <style>
+      .channels-stats {
+         display: grid;
+         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+         gap: 20px;
+      }
+
+      .channel-stat {
+         background: #f8f9fa;
+         border-radius: 8px;
+         padding: 20px;
+         border-left: 4px solid var(--green-color);
+      }
+
+      .channel-header h4 {
+         margin: 0 0 15px 0;
+         color: var(--green-color);
+         font-size: 1.1rem;
+      }
+
+      .channel-info {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 15px;
+      }
+
+      .channel-info span {
+         display: flex;
+         align-items: center;
+         gap: 8px;
+         font-size: 0.9rem;
+         color: #666;
+      }
+
+      .channel-info i {
+         color: var(--primary-color);
+      }
+
+      .form-group input[name="codigo_canal"] {
+         text-transform: uppercase;
+         font-weight: 600;
+         font-family: 'Courier New', monospace;
+      }
+
+      /* Restante do CSS já existente */
       .stats-grid {
          display: grid;
          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -508,6 +554,13 @@ try {
    </style>
 
    <script src="../assets/js/upload.js"></script>
+   <script>
+      // Adicionar formatação automática do código do canal
+      document.getElementById('codigo_canal').addEventListener('input', function(e) {
+         // Converter para maiúsculo e remover caracteres especiais
+         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      });
+   </script>
 </body>
 
 </html>

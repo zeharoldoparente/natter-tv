@@ -108,6 +108,10 @@ BEGIN
 END //
 DELIMITER ;
 
+ALTER TABLE conteudos ADD COLUMN codigo_canal VARCHAR(10) DEFAULT '0000' AFTER tipo;
+
+ALTER TABLE conteudos ADD INDEX idx_codigo_canal (codigo_canal);
+
 COMMIT;
 
 SELECT 'Banco de dados criado com sucesso!' as Status,

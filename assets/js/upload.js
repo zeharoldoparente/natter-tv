@@ -115,7 +115,7 @@ function showFilePreview(file) {
          mediaElement = document.createElement("video");
          mediaElement.src = e.target.result;
          mediaElement.controls = true;
-         mediaElement.muted = true;
+         mediaElement.muted = false;
       }
 
       if (mediaElement) {
