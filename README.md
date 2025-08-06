@@ -74,24 +74,25 @@ chmod 755 temp/
 
 ```
 tv-corporativa/
-├── admin/                  # Painel administrativo
-│   ├── dashboard.php      # Dashboard principal
-│   ├── upload.php         # Upload de arquivos
-│   ├── index.php          # Login
-│   └── logout.php         # Logout
-├── tv/                     # Interface da TV
-│   ├── index.php          # Player da TV
-│   └── get_contents.php   # API de conteúdos
-├── includes/               # Arquivos do sistema
-│   ├── db.php             # Conexão com banco
-│   ├── functions.php      # Funções auxiliares
-│   └── install_tables.php # Instalação de tabelas
-├── assets/                 # Recursos estáticos
-│   ├── css/               # Folhas de estilo
-│   └── js/                # Scripts JavaScript
-├── uploads/                # Arquivos de mídia
-├── temp/                  # Arquivos temporários
-└── install.sql           # Script de instalação
+├── admin/                    # Painel administrativo
+│   ├── dashboard.php         # Dashboard principal
+│   ├── upload.php            # Upload de arquivos
+│   ├── index.php             # Login
+│   └── logout.php            # Logout
+├── tv/                       # Interface da TV
+│   ├── index.php             # Player da TV
+|   ├── selecionar_canal.php  # Seleção de canais
+│   └── get_contents.php      # API de conteúdos
+├── includes/                 # Arquivos do sistema
+│   ├── db.php                # Conexão com banco
+│   ├── functions.php         # Funções auxiliares
+│   └── install_tables.php    # Instalação de tabelas
+├── assets/                   # Recursos estáticos
+│   ├── css/                  # Folhas de estilo
+│   └── js/                   # Scripts JavaScript
+├── uploads/                  # Arquivos de mídia
+├── temp/                     # Arquivos temporários
+└── install.sql               # Script de instalação
 ```
 
 ## 💡 Como Usar
