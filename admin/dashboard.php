@@ -140,36 +140,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                </div>
             </div>
          </div>
-
-         <div class="card">
-            <div class="card-header">
-               <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo</h3>
-            </div>
-            <div class="card-body">
-               <form action="upload.php" method="POST" enctype="multipart/form-data" class="upload-form">
-                  <div class="form-group">
-                     <label for="codigo_canal"><i class="fas fa-tv"></i> Código do Canal</label>
-                     <input type="text" name="codigo_canal" id="codigo_canal"
-                        placeholder="Ex: 1234" maxlength="10" required
-                        value="<?php echo htmlspecialchars($canal_filtro); ?>">
-                     <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
-                  </div>
-                  <div class="form-group">
-                     <label for="arquivo"><i class="fas fa-file"></i> Selecionar Arquivo</label>
-                     <input type="file" name="arquivo" id="arquivo" required accept="image/*,video/*">
-                     <small>Formatos aceitos: JPG, PNG, GIF, MP4, AVI, MOV</small>
-                  </div>
-                  <div class="form-group">
-                     <label for="duracao"><i class="fas fa-clock"></i> Duração (segundos - apenas para imagens)</label>
-                     <input type="number" name="duracao" id="duracao" value="5" min="1" max="60">
-                  </div>
-                  <button type="submit" class="btn btn-success">
-                     <i class="fas fa-upload"></i> Enviar Arquivo
-                  </button>
-               </form>
-            </div>
-         </div>
-
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Conteúdos Ativos</h3>
