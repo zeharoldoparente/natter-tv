@@ -19,8 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
 
       $duracao = (int)$_POST['duracao'] ?? 5;
       $duracao = max(1, min(300, $duracao));
-
-      // NOVO: Capturar o código do canal
       $codigo_canal = sanitizarEntrada($_POST['codigo_canal'] ?? '0000');
       if (empty($codigo_canal)) {
          $codigo_canal = '0000';
@@ -37,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
    }
 }
 
-// Buscar estatísticas por canal
 $stats = [];
 try {
    $statsQuery = $conn->query("
@@ -59,7 +56,6 @@ try {
       }
    }
 } catch (Exception $e) {
-   // Se der erro, manter array vazio
 }
 ?>
 <!DOCTYPE html>
@@ -555,9 +551,7 @@ try {
 
    <script src="../assets/js/upload.js"></script>
    <script>
-      // Adicionar formatação automática do código do canal
       document.getElementById('codigo_canal').addEventListener('input', function(e) {
-         // Converter para maiúsculo e remover caracteres especiais
          this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       });
    </script>

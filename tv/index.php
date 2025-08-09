@@ -1,19 +1,13 @@
 <?php
 include "../includes/db.php";
-
-// Verificar se foi passado um código de canal
 $codigo_canal = '';
 if (isset($_GET['canal']) && !empty($_GET['canal'])) {
    $codigo_canal = strtoupper(trim($_GET['canal']));
-   // Validar formato do código
    if (!preg_match('/^[A-Z0-9]{1,10}$/', $codigo_canal)) {
       $codigo_canal = '';
    }
 }
-
-// Se não tem código, mostrar tela de seleção
 if (empty($codigo_canal)) {
-   // Buscar canais disponíveis
    $canais_disponiveis = [];
    $res = $conn->query("SELECT DISTINCT codigo_canal, COUNT(*) as total_conteudos FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
    if ($res) {
@@ -25,8 +19,6 @@ if (empty($codigo_canal)) {
    include 'selecionar_canal.php';
    exit;
 }
-
-// Buscar conteúdos do canal específico
 $stmt = $conn->prepare("SELECT * FROM conteudos WHERE codigo_canal = ? AND ativo = 1 ORDER BY ordem_exibicao ASC, id ASC");
 $stmt->bind_param("s", $codigo_canal);
 $stmt->execute();
@@ -37,8 +29,6 @@ while ($row = $result->fetch_assoc()) {
    $conteudos[] = $row;
 }
 $stmt->close();
-
-// Se não há conteúdos para este canal, usar conteúdo padrão
 if (empty($conteudos)) {
    $conteudos = [
       [
@@ -67,7 +57,16 @@ if (empty($conteudos)) {
 <body>
    <div id="conteudo-principal">
       <div id="media-container"></div>
-
+      <div id="sidebar-direita">
+         <div class="data-hora-container">
+            <div id="horario"></div>
+            <div id="data"></div>
+         </div>
+         <div class="logo-tv">
+            <img src="../assets/images/TV Corporativa - Natter.png" alt="Logo NatterTV">
+            <div class="canal-nome">Canal <?php echo htmlspecialchars($codigo_canal); ?></div>
+         </div>
+      </div>
       <div id="overlay-info">
          <div class="empresa-logo">
             <img class="tt-logo" src="../assets/images/tt Logo.png" alt="">
@@ -95,7 +94,7 @@ if (empty($conteudos)) {
             <span></span>
             <span></span>
          </div>
-         <div class="canal-info">
+         <div class="canal-info-footer">
             <p><small>Pressione 'C' para trocar de canal</small></p>
          </div>
       </div>
@@ -256,8 +255,6 @@ if (empty($conteudos)) {
 
       function checkForUpdates() {
          log('Verificando atualizações para canal ' + CONFIG.canalAtual + '...');
-
-         // Verificar arquivo de atualização geral
          fetch('../temp/tv_update.txt', {
                cache: 'no-cache',
                headers: {
@@ -346,12 +343,16 @@ if (empty($conteudos)) {
             month: 'long',
             day: 'numeric'
          };
+         const horarioElement = document.getElementById('horario');
+         const dataElement = document.getElementById('data');
 
-         document.getElementById('horario').textContent =
-            now.toLocaleTimeString('pt-BR', timeOptions);
+         if (horarioElement) {
+            horarioElement.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
+         }
 
-         document.getElementById('data').textContent =
-            now.toLocaleDateString('pt-BR', dateOptions);
+         if (dataElement) {
+            dataElement.textContent = now.toLocaleDateString('pt-BR', dateOptions);
+         }
       }
 
       function setupKeyboardControls() {
@@ -371,7 +372,6 @@ if (empty($conteudos)) {
                   break;
                case 'c':
                case 'C':
-                  // Trocar canal - voltar para seleção
                   window.location.href = 'index.php';
                   break;
                case 'f':
@@ -391,8 +391,6 @@ if (empty($conteudos)) {
             console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
-
-      // Auto fullscreen ao clicar
       document.addEventListener('click', function() {
          if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
@@ -401,18 +399,6 @@ if (empty($conteudos)) {
          }
       });
    </script>
-
-   <style>
-      .canal-info {
-         margin-top: 30px;
-         text-align: center;
-      }
-
-      .canal-info p {
-         opacity: 0.6;
-         font-size: 0.9rem;
-      }
-   </style>
 </body>
 
 </html>

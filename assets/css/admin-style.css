@@ -32,11 +32,6 @@ body {
    width: var(--sidebar-width);
    height: 100vh;
    background: var(--green-color);
-   /* background: linear-gradient(
-      135deg,
-      var(--primary-color),
-      var(--warning-color)
-   ); */
    color: white;
    z-index: 1000;
    transition: all 0.3s ease;
@@ -148,11 +143,6 @@ body {
 
 .card-header {
    background: var(--green-color);
-   /* background: linear-gradient(
-      135deg,
-      var(--primary-color),
-      var(--warning-color)
-   ); */
    color: white;
    padding: 20px 25px;
    border-bottom: 1px solid #eee;

@@ -34,7 +34,6 @@ if (isset($_POST['atualizar_tv'])) {
    $mensagem = "Sinal de atualização enviado para as TVs!";
 }
 
-// Filtro por canal
 $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 ?>
 <!DOCTYPE html>
@@ -188,12 +187,10 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                      </thead>
                      <tbody>
                         <?php
-                        // Query base
                         $sql = "SELECT * FROM conteudos WHERE 1=1";
                         $params = [];
                         $types = "";
 
-                        // Adicionar filtro por canal se especificado
                         if ($canal_filtro) {
                            $sql .= " AND codigo_canal = ?";
                            $params[] = $canal_filtro;
@@ -405,7 +402,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
          background: #2980b9;
       }
 
-      /* Formatação automática do código do canal */
       #codigo_canal,
       #canal_filter {
          text-transform: uppercase !important;
@@ -414,7 +410,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 
    <script src="../assets/js/admin.js"></script>
    <script>
-      // Formatação automática dos campos de código
       document.addEventListener('DOMContentLoaded', function() {
          const canalInputs = document.querySelectorAll('#codigo_canal, #canal_filter');
 

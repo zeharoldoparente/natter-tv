@@ -88,10 +88,9 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
       throw new Exception('Tipo de arquivo não permitido');
    }
 
-   // Validar e limpar código do canal
    $codigo_canal = strtoupper(trim($codigo_canal));
    if (empty($codigo_canal) || !preg_match('/^[A-Z0-9]{1,10}$/', $codigo_canal)) {
-      $codigo_canal = '0000'; // Código padrão se inválido
+      $codigo_canal = '0000';
    }
 
    $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
@@ -112,7 +111,6 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
 
    $usuarioId = $_SESSION['usuario_id'] ?? null;
 
-   // MODIFICADO: Incluir código_canal na inserção
    $stmt = $conn->prepare("
         INSERT INTO conteudos 
         (arquivo, nome_original, tipo, codigo_canal, duracao, tamanho, dimensoes, usuario_upload) 

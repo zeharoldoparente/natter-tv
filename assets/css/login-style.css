@@ -18,11 +18,6 @@
 body {
    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
    background: var(--green-color);
-   /* background: linear-gradient(
-      135deg,
-      var(--primary-color),
-      var(--warning-color)
-   ); */
    min-height: 100vh;
    display: flex;
    align-items: center;
@@ -74,11 +69,6 @@ body::before {
    right: -2px;
    bottom: -2px;
    background: var(--green-color);
-   /* background: linear-gradient(
-      135deg,
-      var(--primary-color),
-      var(--warning-color)
-   ); */
    z-index: -1;
    border-radius: 15px;
    opacity: 0;

@@ -5,7 +5,7 @@ define('DB_PASS', '');
 define('DB_NAME', 'tv_corporativa');
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
 define('TEMP_PATH', __DIR__ . '/../temp/');
-define('MAX_FILE_SIZE', 50 * 1024 * 1024); // 50MB
+define('MAX_FILE_SIZE', 50 * 1024 * 1024);
 if (!is_dir(UPLOAD_PATH)) {
    mkdir(UPLOAD_PATH, 0755, true);
 }
