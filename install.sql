@@ -149,6 +149,8 @@ CREATE TABLE IF NOT EXISTS cache_rss (
     FOREIGN KEY (feed_id) REFERENCES feeds_rss(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+ALTER TABLE feeds_rss ADD COLUMN ultima_atualizacao TIMESTAMP NULL;
+
 INSERT IGNORE INTO configuracoes (chave, valor, descricao, tipo) VALUES 
 ('rss_update_interval', '300', 'Intervalo de atualização dos feeds RSS (segundos)', 'number'),
 ('rss_max_items', '50', 'Número máximo de itens por feed', 'number'),

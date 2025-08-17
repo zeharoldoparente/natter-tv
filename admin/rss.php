@@ -51,7 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
          if ($stmt->execute()) {
             $feed_id = $conn->insert_id;
-            atualizarFeedRSS($feed_id);
+            ob_start();
+            try {
+               atualizarFeedRSS($feed_id);
+            } finally {
+               ob_end_clean();
+            }
             $mensagem = "Feed RSS adicionado com sucesso!";
             sinalizarAtualizacaoTV();
          } else {
@@ -80,7 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $stmt->bind_param("sssssssii", $nome, $url_feed, $codigo_canal, $velocidade, $cor_texto, $cor_fundo, $posicao, $ativo, $id);
 
          if ($stmt->execute()) {
-            atualizarFeedRSS($id);
+            ob_start();
+            try {
+               atualizarFeedRSS($id);
+            } finally {
+               ob_end_clean();
+            }
             $mensagem = "Feed RSS atualizado com sucesso!";
             sinalizarAtualizacaoTV();
          }
@@ -88,7 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       if (isset($_POST['atualizar_todos_feeds'])) {
-         atualizarTodosFeedsRSS();
+         ob_start();
+         try {
+            atualizarTodosFeedsRSS();
+         } finally {
+            ob_end_clean();
+         }
          $mensagem = "Todos os feeds RSS foram atualizados!";
       }
    } catch (Exception $e) {
