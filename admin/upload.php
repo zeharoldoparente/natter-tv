@@ -79,6 +79,7 @@ try {
       <ul class="sidebar-menu">
          <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
          <li class="active"><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>

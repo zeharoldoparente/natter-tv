@@ -52,11 +52,78 @@ if (empty($conteudos)) {
    <link rel="stylesheet" href="../assets/css/tv-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
+   <style>
+      /* Estilos CSS para melhorar a animação do RSS */
+      .rss-container {
+         position: fixed;
+         left: 0;
+         right: 0;
+         height: 50px;
+         overflow: hidden;
+         z-index: 1000;
+         display: flex;
+         align-items: center;
+      }
+
+      .rss-container.topo {
+         top: 0;
+      }
+
+      .rss-container.rodape {
+         bottom: 0;
+      }
+
+      .rss-ticker {
+         display: flex;
+         white-space: nowrap;
+         animation: scroll-horizontal linear infinite;
+         padding-left: 100%;
+      }
+
+      @keyframes scroll-horizontal {
+         0% {
+            transform: translateX(0);
+         }
+         100% {
+            transform: translateX(-100%);
+         }
+      }
+
+      .rss-item {
+         display: inline-flex;
+         align-items: center;
+         padding: 0 20px;
+         font-size: 18px;
+         font-weight: 500;
+      }
+
+      .rss-separator {
+         display: inline-block;
+         margin: 0 20px;
+         color: rgba(255, 255, 255, 0.5);
+         font-weight: bold;
+      }
+
+      .rss-container.hidden {
+         display: none;
+      }
+   </style>
 </head>
 
 <body>
    <div id="conteudo-principal">
       <div id="media-container"></div>
+
+      <!-- RSS Container Topo -->
+      <div id="rss-topo" class="rss-container topo hidden">
+         <div class="rss-ticker" id="rss-ticker-topo"></div>
+      </div>
+
+      <!-- RSS Container Rodapé -->
+      <div id="rss-rodape" class="rss-container rodape hidden">
+         <div class="rss-ticker" id="rss-ticker-rodape"></div>
+      </div>
+
       <div id="sidebar-direita">
          <div class="data-hora-container">
             <div id="horario"></div>
@@ -67,6 +134,7 @@ if (empty($conteudos)) {
             <div class="canal-nome">Canal <?php echo htmlspecialchars($codigo_canal); ?></div>
          </div>
       </div>
+
       <div id="overlay-info">
          <div class="empresa-logo">
             <img class="tt-logo" src="../assets/images/tt Logo.png" alt="">
@@ -103,6 +171,7 @@ if (empty($conteudos)) {
    <script>
       const CONFIG = {
          updateInterval: 30000,
+         rssUpdateInterval: 300000, // 5 minutos
          showOverlay: true,
          fadeTransition: true,
          debug: false,
@@ -114,6 +183,11 @@ if (empty($conteudos)) {
       let isPlaying = false;
       let updateTimer = null;
       let contentTimer = null;
+      let rssTimer = null;
+      let rssData = {
+         rodape: [],
+         topo: []
+      };
 
       document.addEventListener('DOMContentLoaded', function() {
          initializeTV();
@@ -125,6 +199,9 @@ if (empty($conteudos)) {
          updateDateTime();
          setInterval(updateDateTime, 1000);
 
+         // Inicializar RSS imediatamente
+         initializeRSS();
+
          if (conteudos.length === 0 || conteudos[0].id === 0) {
             showNoContentScreen();
          } else {
@@ -135,6 +212,117 @@ if (empty($conteudos)) {
          setupKeyboardControls();
 
          log('TV inicializada com sucesso para o canal ' + CONFIG.canalAtual);
+      }
+
+      function initializeRSS() {
+         // Carregar RSS imediatamente ao inicializar
+         updateRSSContent();
+         
+         // Configurar atualização periódica
+         if (rssTimer) {
+            clearInterval(rssTimer);
+         }
+         rssTimer = setInterval(updateRSSContent, CONFIG.rssUpdateInterval);
+         log('Sistema RSS inicializado e carregado');
+      }
+
+      function updateRSSContent() {
+         log('Atualizando conteúdo RSS para canal ' + CONFIG.canalAtual + '...');
+
+         fetch(`get_rss.php?canal=${CONFIG.canalAtual}`, {
+               cache: 'no-cache',
+               headers: {
+                  'Cache-Control': 'no-cache'
+               }
+            })
+            .then(response => response.json())
+            .then(data => {
+               if (data.error) {
+                  log('Erro na API RSS: ' + data.message);
+                  return;
+               }
+
+               rssData = data;
+               setupRSSTickers();
+               log(`RSS atualizado: ${data.total_itens} itens (${data.rodape.length} rodapé, ${data.topo.length} topo)`);
+            })
+            .catch(error => {
+               log('Erro ao buscar RSS: ' + error.message);
+            });
+      }
+
+      function setupRSSTickers() {
+         // Configurar RSS do rodapé
+         if (rssData.rodape && rssData.rodape.length > 0) {
+            const rodapeContainer = document.getElementById('rss-rodape');
+            const rodapeTicker = document.getElementById('rss-ticker-rodape');
+
+            setupRSSPosition(rssData.rodape, rodapeTicker, rodapeContainer);
+            rodapeContainer.classList.remove('hidden');
+         } else {
+            document.getElementById('rss-rodape').classList.add('hidden');
+         }
+
+         // Configurar RSS do topo
+         if (rssData.topo && rssData.topo.length > 0) {
+            const topoContainer = document.getElementById('rss-topo');
+            const topoTicker = document.getElementById('rss-ticker-topo');
+
+            setupRSSPosition(rssData.topo, topoTicker, topoContainer);
+            topoContainer.classList.remove('hidden');
+         } else {
+            document.getElementById('rss-topo').classList.add('hidden');
+         }
+      }
+
+      function setupRSSPosition(items, ticker, container) {
+         if (!items || items.length === 0) return;
+
+         // Usar configuração do primeiro item
+         const config = items[0].configuracao;
+
+         // Aplicar cores
+         container.style.backgroundColor = config.cor_fundo;
+         container.style.color = config.cor_texto;
+
+         // Criar conteúdo HTML com separadores, SEM o nome do feed
+         let tickerHTML = '';
+         items.forEach((item, index) => {
+            // Adicionar apenas o texto da notícia, sem o nome do feed
+            tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
+            
+            // Adicionar separador entre notícias (exceto depois da última)
+            if (index < items.length - 1) {
+               tickerHTML += `<span class="rss-separator">|</span>`;
+            }
+         });
+
+         // Duplicar o conteúdo para criar loop contínuo
+         tickerHTML = tickerHTML + `<span class="rss-separator">|</span>` + tickerHTML;
+         
+         ticker.innerHTML = tickerHTML;
+
+         // Aguardar o DOM atualizar para calcular larguras
+         setTimeout(() => {
+            const tickerWidth = ticker.scrollWidth;
+            const containerWidth = container.offsetWidth;
+            
+            // Calcular duração baseada na velocidade configurada
+            // Converter velocidade de px/s para duração em segundos
+            const totalDistance = tickerWidth / 2; // Dividir por 2 porque duplicamos o conteúdo
+            const duration = totalDistance / config.velocidade_scroll;
+
+            // Aplicar animação com a duração calculada
+            ticker.style.animation = `scroll-horizontal ${duration}s linear infinite`;
+
+            log(`RSS configurado: ${items.length} itens, velocidade: ${config.velocidade_scroll}px/s, duração: ${duration.toFixed(2)}s`);
+         }, 100);
+      }
+
+      function escapeHtml(text) {
+         const div = document.createElement('div');
+         div.textContent = text;
+         return div.innerHTML;
       }
 
       function startPlayback() {
@@ -205,7 +393,7 @@ if (empty($conteudos)) {
          const video = document.createElement('video');
          video.src = `../uploads/${content.arquivo}`;
          video.autoplay = true;
-         video.muted = true;
+         video.muted = false;
 
          video.onloadeddata = function() {
             const container = document.getElementById('media-container');
@@ -343,16 +531,16 @@ if (empty($conteudos)) {
             month: 'long',
             day: 'numeric'
          };
-         const horarioElement = document.getElementById('horario');
-         const dataElement = document.getElementById('data');
+         const horarioElements = document.querySelectorAll('#horario');
+         const dataElements = document.querySelectorAll('#data');
 
-         if (horarioElement) {
-            horarioElement.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
-         }
+         horarioElements.forEach(element => {
+            element.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
+         });
 
-         if (dataElement) {
-            dataElement.textContent = now.toLocaleDateString('pt-BR', dateOptions);
-         }
+         dataElements.forEach(element => {
+            element.textContent = now.toLocaleDateString('pt-BR', dateOptions);
+         });
       }
 
       function setupKeyboardControls() {
@@ -382,6 +570,10 @@ if (empty($conteudos)) {
                      document.documentElement.requestFullscreen();
                   }
                   break;
+               case 'u':
+               case 'U':
+                  updateRSSContent();
+                  break;
             }
          });
       }
@@ -391,6 +583,7 @@ if (empty($conteudos)) {
             console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
+
       document.addEventListener('click', function() {
          if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {

@@ -112,6 +112,48 @@ ALTER TABLE conteudos ADD COLUMN codigo_canal VARCHAR(10) DEFAULT '0000' AFTER t
 
 ALTER TABLE conteudos ADD INDEX idx_codigo_canal (codigo_canal);
 
+CREATE TABLE IF NOT EXISTS feeds_rss (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(255) NOT NULL,
+    url_feed TEXT NOT NULL,
+    codigo_canal VARCHAR(10) DEFAULT 'TODOS',
+    velocidade_scroll INT DEFAULT 50,
+    cor_texto VARCHAR(7) DEFAULT '#FFFFFF',
+    cor_fundo VARCHAR(7) DEFAULT '#000000',
+    posicao ENUM('topo', 'rodape') DEFAULT 'rodape',
+    ativo TINYINT(1) DEFAULT 1,
+    usuario_upload INT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ultima_atualizacao TIMESTAMP NULL,
+    
+    INDEX idx_canal (codigo_canal),
+    INDEX idx_ativo (ativo),
+    INDEX idx_posicao (posicao)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS cache_rss (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    feed_id INT NOT NULL,
+    titulo VARCHAR(500) NOT NULL,
+    descricao TEXT,
+    link TEXT,
+    data_publicacao TIMESTAMP NULL,
+    guid VARCHAR(500),
+    data_cache TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_feed (feed_id),
+    INDEX idx_data_pub (data_publicacao),
+    INDEX idx_cache (data_cache),
+    UNIQUE KEY unique_guid_feed (feed_id, guid),
+    
+    FOREIGN KEY (feed_id) REFERENCES feeds_rss(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO configuracoes (chave, valor, descricao, tipo) VALUES 
+('rss_update_interval', '300', 'Intervalo de atualização dos feeds RSS (segundos)', 'number'),
+('rss_max_items', '50', 'Número máximo de itens por feed', 'number'),
+('rss_cache_duration', '3600', 'Duração do cache RSS (segundos)', 'number');
+
 COMMIT;
 
 SELECT 'Banco de dados criado com sucesso!' as Status,

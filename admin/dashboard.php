@@ -57,6 +57,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
       <ul class="sidebar-menu">
          <li class="active"><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
          <li><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
@@ -90,6 +91,88 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                <a href="../tv/index.php" target="_blank" class="btn btn-secondary">
                   <i class="fas fa-eye"></i> Visualizar TV
                </a>
+               <a href="rss.php" class="btn btn-success">
+                  <i class="fas fa-rss"></i> Gerenciar RSS
+               </a>
+            </div>
+         </div>
+
+         <!-- Estatísticas do Sistema -->
+         <div class="card">
+            <div class="card-header">
+               <h3><i class="fas fa-chart-pie"></i> Estatísticas do Sistema</h3>
+            </div>
+            <div class="card-body">
+               <?php
+               // Estatísticas de conteúdo
+               $stats_conteudo = $conn->query("
+                  SELECT 
+                     COUNT(*) as total_arquivos,
+                     SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens,
+                     SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos,
+                     SUM(tamanho) as espaco_usado
+                  FROM conteudos 
+                  WHERE ativo = 1
+               ")->fetch_assoc();
+
+               // Estatísticas de RSS
+               $stats_rss = $conn->query("
+                  SELECT 
+                     COUNT(*) as total_feeds,
+                     SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos,
+                     COUNT(DISTINCT codigo_canal) as canais_rss
+                  FROM feeds_rss
+               ")->fetch_assoc();
+
+               $stats_rss_items = $conn->query("
+                  SELECT COUNT(*) as total_items
+                  FROM cache_rss c
+                  INNER JOIN feeds_rss f ON c.feed_id = f.id
+                  WHERE f.ativo = 1
+               ")->fetch_assoc();
+               ?>
+
+               <div class="stats-overview">
+                  <div class="stat-card">
+                     <div class="stat-icon">
+                        <i class="fas fa-file"></i>
+                     </div>
+                     <div class="stat-info">
+                        <h3><?php echo $stats_conteudo['total_arquivos']; ?></h3>
+                        <p>Total de Arquivos</p>
+                     </div>
+                  </div>
+
+                  <div class="stat-card">
+                     <div class="stat-icon">
+                        <i class="fas fa-rss"></i>
+                     </div>
+                     <div class="stat-info">
+                        <h3><?php echo $stats_rss['feeds_ativos']; ?></h3>
+                        <p>Feeds RSS Ativos</p>
+                     </div>
+                  </div>
+
+                  <div class="stat-card">
+                     <div class="stat-icon">
+                        <i class="fas fa-newspaper"></i>
+                     </div>
+                     <div class="stat-info">
+                        <h3><?php echo $stats_rss_items['total_items']; ?></h3>
+                        <p>Notícias RSS</p>
+                     </div>
+                  </div>
+
+                  <div class="stat-card">
+                     <div class="stat-icon">
+                        <i class="fas fa-hdd"></i>
+                     </div>
+                     <div class="stat-info">
+                        <h3><?php echo formatFileSize($stats_conteudo['espaco_usado']); ?></h3>
+                        <p>Espaço Utilizado</p>
+                     </div>
+                  </div>
+               </div>
             </div>
          </div>
 
@@ -111,6 +194,18 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                   GROUP BY codigo_canal
                   ORDER BY codigo_canal
                ");
+
+               // Buscar feeds RSS por canal
+               $rss_por_canal = [];
+               $rss_query = $conn->query("
+                  SELECT codigo_canal, COUNT(*) as total_feeds
+                  FROM feeds_rss 
+                  WHERE ativo = 1
+                  GROUP BY codigo_canal
+               ");
+               while ($row = $rss_query->fetch_assoc()) {
+                  $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
+               }
                ?>
 
                <div class="channels-overview">
@@ -126,6 +221,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                            <span><i class="fas fa-file"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
                            <span><i class="fas fa-image"></i> <?php echo $stat['total_imagens']; ?> imagens</span>
                            <span><i class="fas fa-video"></i> <?php echo $stat['total_videos']; ?> vídeos</span>
+                           <span><i class="fas fa-rss"></i> <?php echo $rss_por_canal[$stat['codigo_canal']] ?? 0; ?> feeds RSS</span>
                            <span><i class="fas fa-hdd"></i> <?php echo formatFileSize($stat['espaco_usado']); ?></span>
                         </div>
                         <div class="channel-actions">
@@ -133,12 +229,17 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                               target="_blank" class="btn btn-sm btn-secondary">
                               <i class="fas fa-eye"></i> Ver Canal
                            </a>
+                           <a href="rss.php?canal=<?php echo urlencode($stat['codigo_canal']); ?>"
+                              class="btn btn-sm btn-success">
+                              <i class="fas fa-rss"></i> RSS
+                           </a>
                         </div>
                      </div>
                   <?php endwhile; ?>
                </div>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Conteúdos Ativos</h3>
@@ -250,6 +351,54 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
    </main>
 
    <style>
+      .stats-overview {
+         display: grid;
+         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+         gap: 20px;
+         margin-bottom: 30px;
+      }
+
+      .stat-card {
+         background: white;
+         padding: 20px;
+         border-radius: 10px;
+         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+         display: flex;
+         align-items: center;
+         gap: 15px;
+         transition: transform 0.2s ease;
+      }
+
+      .stat-card:hover {
+         transform: translateY(-2px);
+         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .stat-icon {
+         width: 50px;
+         height: 50px;
+         border-radius: 10px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         background: var(--green-color);
+         color: white;
+         font-size: 1.5rem;
+      }
+
+      .stat-info h3 {
+         margin: 0;
+         font-size: 1.8rem;
+         font-weight: 600;
+         color: var(--green-color);
+      }
+
+      .stat-info p {
+         margin: 5px 0 0 0;
+         color: #666;
+         font-size: 0.9rem;
+      }
+
       .channels-overview {
          display: grid;
          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -319,6 +468,9 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 
       .channel-actions {
          text-align: right;
+         display: flex;
+         gap: 8px;
+         justify-content: flex-end;
       }
 
       .filter-section {

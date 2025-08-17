@@ -27,7 +27,7 @@ body {
    top: 0;
    left: 0;
    width: 90%;
-   height: 100%;
+   height: calc(100% - 60px); /* Espaço para RSS no rodapé */
    display: flex;
    align-items: center;
    justify-content: center;
@@ -41,13 +41,80 @@ body {
    object-fit: cover;
    transition: opacity 0.5s ease-in-out;
 }
+
+/* RSS Container */
+.rss-container {
+   position: absolute;
+   left: 0;
+   width: 90%;
+   height: 60px;
+   z-index: 15;
+   overflow: hidden;
+   font-family: Arial, sans-serif;
+}
+
+.rss-container.rodape {
+   bottom: 0;
+   border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.rss-container.topo {
+   top: 0;
+   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.rss-ticker {
+   display: flex;
+   align-items: center;
+   height: 100%;
+   white-space: nowrap;
+   animation: scroll-horizontal linear infinite;
+}
+
+.rss-item {
+   display: inline-flex;
+   align-items: center;
+   padding: 0 40px;
+   font-size: 16px;
+   font-weight: 500;
+   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.rss-item:not(:last-child)::after {
+   content: "•";
+   margin-left: 40px;
+   color: rgba(255, 255, 255, 0.6);
+   font-size: 20px;
+}
+
+.rss-feed-label {
+   background: rgba(255, 255, 255, 0.2);
+   padding: 2px 8px;
+   border-radius: 10px;
+   font-size: 12px;
+   margin-right: 10px;
+   text-transform: uppercase;
+   opacity: 0.8;
+}
+
+/* Animação do scroll */
+@keyframes scroll-horizontal {
+   0% {
+      transform: translateX(100%);
+   }
+   100% {
+      transform: translateX(-100%);
+   }
+}
+
+/* Sidebar ajustada para RSS */
 #sidebar-direita {
    position: absolute;
    top: 0;
    right: 0;
    width: min(400px, 20vw);
    min-width: 280px;
-   height: 100vh;
+   height: calc(100vh - 60px); /* Ajuste para o RSS */
    z-index: 10;
    display: flex;
    flex-direction: column-reverse;
@@ -151,6 +218,8 @@ body {
    font-size: 1.2rem;
    opacity: 0.8;
 }
+
+/* Channel Selector */
 .channel-selector {
    position: fixed;
    top: 0;
@@ -359,6 +428,7 @@ body {
    }
 }
 
+/* Tela sem conteúdo */
 #tela-sem-conteudo {
    position: fixed;
    top: 0;
@@ -419,6 +489,7 @@ body {
    animation-delay: -0.16s;
 }
 
+/* Utilitários */
 .hidden {
    display: none !important;
 }
@@ -428,6 +499,7 @@ body {
    margin-right: 3px;
 }
 
+/* Animações */
 @keyframes fadeIn {
    from {
       opacity: 0;
@@ -504,7 +576,8 @@ body {
    }
 }
 
-@media (min-width: 2560px) {
+/* Media Queries */
+/* @media (min-width: 2560px) {
    #sidebar-direita {
       width: 500px;
    }
@@ -573,6 +646,10 @@ body {
    .sem-conteudo p {
       font-size: 1.1rem;
    }
+
+   .rss-item {
+      font-size: 14px;
+   }
 }
 
 @media (max-width: 768px) {
@@ -588,11 +665,39 @@ body {
    .data-hora-container {
       padding: 5px 15px;
    }
+
+   .rss-container {
+      height: 50px;
+   }
+
+   .rss-item {
+      font-size: 12px;
+   }
+
+   #media-container {
+      height: calc(100% - 50px);
+   }
+
+   #sidebar-direita {
+      height: calc(100vh - 50px);
+   }
 }
 
 @media (max-height: 600px) {
+   .rss-container {
+      height: 40px;
+   }
+
+   .rss-item {
+      font-size: 11px;
+   }
+
+   #media-container {
+      height: calc(100% - 40px);
+   }
+
    #sidebar-direita {
-      display: none;
+      height: calc(100vh - 40px);
    }
 }
 
@@ -612,8 +717,9 @@ body {
    .logo-tv img {
       width: 80px;
    }
-}
+} */
 
+/* Fullscreen */
 :-webkit-full-screen #conteudo-principal {
    background: #000;
 }
