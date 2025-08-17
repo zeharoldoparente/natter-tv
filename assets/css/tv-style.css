@@ -61,6 +61,36 @@ body {
    top: 0;
 }
 
+#rss-rodape {
+   position: relative;
+   left: auto;
+   width: 100%;
+}
+
+#rodape-bar {
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   width: 90%;
+   height: 60px;
+   display: flex;
+   align-items: center;
+   z-index: 15;
+}
+
+.rodape-logo {
+   width: 60px;
+   height: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.rodape-logo img {
+   max-height: 80%;
+   max-width: 100%;
+}
+
 .rss-ticker {
    display: flex;
    align-items: center;
@@ -115,13 +145,35 @@ body {
    height: calc(100vh - 60px); /* Ajuste para o RSS */
    z-index: 10;
    display: flex;
-   flex-direction: column-reverse;
-   align-items: flex-end;
+   flex-direction: column;
+   align-items: stretch;
    animation: slideInRight 0.8s ease-out;
-   background-image: url(../images/propaganda.png);
-   background-size: cover;
-   background-position: center;
-   background-repeat: no-repeat;
+}
+
+.propaganda {
+   flex: 1;
+}
+
+.propaganda img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   display: block;
+}
+
+.info-branca {
+   background: #fff;
+   text-align: center;
+}
+
+.info-branca .logo-tv {
+   background: transparent;
+   padding: clamp(5px, 0vw, 0px) clamp(40px, 8vw, 114px);
+}
+
+.info-branca .data-hora-container {
+   background: transparent;
+   padding: clamp(5px, 1vh, 10px) clamp(40px, 6vw, 94px);
 }
 
 .logo-tv {

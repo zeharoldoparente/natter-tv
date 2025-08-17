@@ -52,62 +52,6 @@ if (empty($conteudos)) {
    <link rel="stylesheet" href="../assets/css/tv-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
-   <style>
-      /* Estilos CSS para melhorar a animação do RSS */
-      .rss-container {
-         position: fixed;
-         left: 0;
-         right: 0;
-         height: 50px;
-         overflow: hidden;
-         z-index: 1000;
-         display: flex;
-         align-items: center;
-      }
-
-      .rss-container.topo {
-         top: 0;
-      }
-
-      .rss-container.rodape {
-         bottom: 0;
-      }
-
-      .rss-ticker {
-         display: flex;
-         white-space: nowrap;
-         animation: scroll-horizontal linear infinite;
-         padding-left: 100%;
-      }
-
-      @keyframes scroll-horizontal {
-         0% {
-            transform: translateX(0);
-         }
-         100% {
-            transform: translateX(-100%);
-         }
-      }
-
-      .rss-item {
-         display: inline-flex;
-         align-items: center;
-         padding: 0 20px;
-         font-size: 18px;
-         font-weight: 500;
-      }
-
-      .rss-separator {
-         display: inline-block;
-         margin: 0 20px;
-         color: rgba(255, 255, 255, 0.5);
-         font-weight: bold;
-      }
-
-      .rss-container.hidden {
-         display: none;
-      }
-   </style>
 </head>
 
 <body>
@@ -119,19 +63,29 @@ if (empty($conteudos)) {
          <div class="rss-ticker" id="rss-ticker-topo"></div>
       </div>
 
-      <!-- RSS Container Rodapé -->
-      <div id="rss-rodape" class="rss-container rodape hidden">
-         <div class="rss-ticker" id="rss-ticker-rodape"></div>
+      <div id="sidebar-direita">
+         <div class="propaganda">
+            <img src="../assets/images/propaganda.png" alt="Propaganda">
+         </div>
+         <div class="info-branca">
+            <div class="logo-tv">
+               <img src="../assets/images/TV Corporativa - Natter.png" alt="Logo NatterTV">
+               <div class="canal-nome">Canal <?php echo htmlspecialchars($codigo_canal); ?></div>
+            </div>
+            <div class="data-hora-container">
+               <div id="horario"></div>
+               <div id="data"></div>
+            </div>
+         </div>
       </div>
 
-      <div id="sidebar-direita">
-         <div class="data-hora-container">
-            <div id="horario"></div>
-            <div id="data"></div>
+      <div id="rodape-bar">
+         <div class="rodape-logo">
+            <img src="../assets/images/tt Logo.png" alt="Logo">
          </div>
-         <div class="logo-tv">
-            <img src="../assets/images/TV Corporativa - Natter.png" alt="Logo NatterTV">
-            <div class="canal-nome">Canal <?php echo htmlspecialchars($codigo_canal); ?></div>
+         <!-- RSS Container Rodapé -->
+         <div id="rss-rodape" class="rss-container rodape hidden">
+            <div class="rss-ticker" id="rss-ticker-rodape"></div>
          </div>
       </div>
 
@@ -217,7 +171,7 @@ if (empty($conteudos)) {
       function initializeRSS() {
          // Carregar RSS imediatamente ao inicializar
          updateRSSContent();
-         
+
          // Configurar atualização periódica
          if (rssTimer) {
             clearInterval(rssTimer);
@@ -290,7 +244,7 @@ if (empty($conteudos)) {
          items.forEach((item, index) => {
             // Adicionar apenas o texto da notícia, sem o nome do feed
             tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
-            
+
             // Adicionar separador entre notícias (exceto depois da última)
             if (index < items.length - 1) {
                tickerHTML += `<span class="rss-separator">|</span>`;
@@ -299,14 +253,14 @@ if (empty($conteudos)) {
 
          // Duplicar o conteúdo para criar loop contínuo
          tickerHTML = tickerHTML + `<span class="rss-separator">|</span>` + tickerHTML;
-         
+
          ticker.innerHTML = tickerHTML;
 
          // Aguardar o DOM atualizar para calcular larguras
          setTimeout(() => {
             const tickerWidth = ticker.scrollWidth;
             const containerWidth = container.offsetWidth;
-            
+
             // Calcular duração baseada na velocidade configurada
             // Converter velocidade de px/s para duração em segundos
             const totalDistance = tickerWidth / 2; // Dividir por 2 porque duplicamos o conteúdo
