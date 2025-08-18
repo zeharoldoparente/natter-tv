@@ -71,11 +71,12 @@ body {
    position: absolute;
    bottom: 0;
    left: 0;
-   width: 90%;
+   width: 100%;
    height: 60px;
    display: flex;
    align-items: center;
    z-index: 15;
+   background: #166353;
 }
 
 .rodape-logo {
@@ -227,17 +228,19 @@ body {
    line-height: 1.2;
 }
 
-.empresa-logo {
+#overlay-info {
+   position: absolute;
+   top: 10px;
+   left: 10px;
+   width: 90%;
    display: flex;
+   justify-content: space-between;
    align-items: center;
-   font-weight: 600;
-   font-size: 1.3rem;
-}
-
-.empresa-logo i {
-   margin-right: 12px;
-   color: #f39c12;
-   font-size: 1.5rem;
+   color: #fff;
+   z-index: 20;
+   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+   pointer-events: none;
+   padding: 5px 10px;
 }
 
 .data-hora {

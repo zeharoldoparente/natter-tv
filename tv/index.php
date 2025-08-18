@@ -89,17 +89,6 @@ if (empty($conteudos)) {
          </div>
       </div>
 
-      <div id="overlay-info">
-         <div class="empresa-logo">
-            <img class="tt-logo" src="../assets/images/tt Logo.png" alt="">
-            <span>NatterTV - Canal <?php echo htmlspecialchars($codigo_canal); ?></span>
-         </div>
-         <div class="data-hora">
-            <div id="horario"></div>
-            <div id="data"></div>
-         </div>
-      </div>
-
       <div id="loading" class="hidden">
          <i class="fas fa-spinner fa-spin"></i>
          <p>Carregando conteúdo...</p>
@@ -126,7 +115,7 @@ if (empty($conteudos)) {
       const CONFIG = {
          updateInterval: 30000,
          rssUpdateInterval: 300000, // 5 minutos
-         showOverlay: true,
+         showOverlay: false,
          fadeTransition: true,
          debug: false,
          canalAtual: '<?php echo $codigo_canal; ?>'
