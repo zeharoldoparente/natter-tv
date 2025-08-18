@@ -92,9 +92,9 @@ class RSSManager {
       // Aplicar estilos do container
       this.applyContainerStyles(container, config);
 
-      // Gerar HTML do ticker
+      // Gerar HTML do ticker e duplicar conteúdo para loop contínuo
       const tickerHTML = this.generateTickerHTML(items);
-      ticker.innerHTML = tickerHTML;
+      ticker.innerHTML = tickerHTML + tickerHTML;
 
       // Configurar animação
       this.setupAnimation(ticker, container, config);
@@ -132,10 +132,11 @@ class RSSManager {
    setupAnimation(ticker, container, config) {
       // Aguardar renderização
       setTimeout(() => {
-         const tickerWidth = ticker.scrollWidth;
+         const fullWidth = ticker.scrollWidth;
+         const contentWidth = fullWidth / 2; // largura original antes da duplicação
          const containerWidth = container.offsetWidth;
 
-         if (tickerWidth <= containerWidth) {
+         if (contentWidth <= containerWidth) {
             // Conteúdo cabe na tela, não precisa de animação
             ticker.style.animation = "none";
             ticker.style.transform = "none";
@@ -144,7 +145,7 @@ class RSSManager {
 
          // Calcular duração baseada na velocidade
          const totalDistance = tickerWidth + containerWidth;
-         const duration = totalDistance / config.velocidade_scroll;
+         const duration = contentWidth / config.velocidade_scroll;
 
          // Aplicar animação
          ticker.style.animationDuration = duration + "s";
@@ -153,7 +154,7 @@ class RSSManager {
          ticker.style.animationIterationCount = "infinite";
 
          this.log(
-            `Animação configurada: ${tickerWidth}px, duração: ${duration}s, velocidade: ${config.velocidade_scroll}px/s`
+            `Animação configurada: ${contentWidth}px, duração: ${duration}s, velocidade: ${config.velocidade_scroll}px/s`
          );
       }, 100);
    }
@@ -206,13 +207,11 @@ class RSSManager {
       const ticker = document.getElementById(`rss-ticker-${position}`);
       if (!ticker) return;
 
-      const container = document.getElementById(`rss-${position}`);
-      const tickerWidth = ticker.scrollWidth;
-      const containerWidth = container.offsetWidth;
-      const totalDistance = tickerWidth + containerWidth;
-      const duration = totalDistance / speed;
+      const fullWidth = ticker.scrollWidth;
+      const contentWidth = fullWidth / 2;
+      const duration = contentWidth / speed;
 
-      ticker.style.animationDuration = duration + "s";
+      ticker.style.animation = `scroll-horizontal ${duration}s linear infinite`;
       this.log(`Velocidade alterada para ${position}: ${speed}px/s`);
    }
 

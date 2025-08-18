@@ -228,7 +228,7 @@ if (empty($conteudos)) {
          container.style.backgroundColor = config.cor_fundo;
          container.style.color = config.cor_texto;
 
-         // Criar conteúdo HTML com separadores, SEM o nome do feed
+         // Criar conteúdo HTML com separadores limpos
          let tickerHTML = '';
          items.forEach((item, index) => {
             // Adicionar apenas o texto da notícia, sem o nome do feed
@@ -236,29 +236,66 @@ if (empty($conteudos)) {
 
             // Adicionar separador entre notícias (exceto depois da última)
             if (index < items.length - 1) {
-               tickerHTML += `<span class="rss-separator">|</span>`;
+               tickerHTML += `<span class="rss-separator"> | </span>`;
             }
          });
 
          // Duplicar o conteúdo para criar loop contínuo
-         tickerHTML = tickerHTML + `<span class="rss-separator">|</span>` + tickerHTML;
+         tickerHTML = tickerHTML + `<span class="rss-separator"> | </span>` + tickerHTML;
 
          ticker.innerHTML = tickerHTML;
 
+         // CORREÇÃO DA VELOCIDADE: Limpar animações anteriores
+         ticker.style.animation = 'none';
+         ticker.style.transform = 'translateX(0)';
+
          // Aguardar o DOM atualizar para calcular larguras
          setTimeout(() => {
-            const tickerWidth = ticker.scrollWidth;
+            const fullWidth = ticker.scrollWidth;
+            const contentWidth = fullWidth / 2; // largura original antes da duplicação
             const containerWidth = container.offsetWidth;
 
-            // Calcular duração baseada na velocidade configurada
-            // Converter velocidade de px/s para duração em segundos
-            const totalDistance = tickerWidth / 2; // Dividir por 2 porque duplicamos o conteúdo
-            const duration = totalDistance / config.velocidade_scroll;
+            if (contentWidth <= containerWidth) {
+               ticker.style.animation = "none";
+               ticker.style.transform = "none";
+               return;
+            }
 
-            // Aplicar animação com a duração calculada
-            ticker.style.animation = `scroll-horizontal ${duration}s linear infinite`;
+            // CORREÇÃO: Forçar recálculo e aplicar nova animação
+            ticker.offsetHeight; // Força reflow
 
-            log(`RSS configurado: ${items.length} itens, velocidade: ${config.velocidade_scroll}px/s, duração: ${duration.toFixed(2)}s`);
+            // Calcular duração baseada na velocidade configurada (px/s)
+            const velocidade = Math.max(config.velocidade_scroll, 10); // Mínimo 10px/s
+            const duration = contentWidth / velocidade;
+
+            // CORREÇÃO: Criar animação única para cada ticker
+            const animationName = `scroll-horizontal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            // Remover animação anterior se existir
+            const existingStyle = document.getElementById(`rss-animation-${container.id}`);
+            if (existingStyle) {
+               existingStyle.remove();
+            }
+
+            // Criar nova animação CSS
+            const style = document.createElement('style');
+            style.id = `rss-animation-${container.id}`;
+            style.textContent = `
+               @keyframes ${animationName} {
+                  0% {
+                     transform: translateX(0);
+                  }
+                  100% {
+                     transform: translateX(-${contentWidth}px);
+                  }
+               }
+            `;
+            document.head.appendChild(style);
+
+            // Aplicar nova animação
+            ticker.style.animation = `${animationName} ${duration}s linear infinite`;
+
+            log(`RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s, largura: ${contentWidth}px`);
          }, 100);
       }
 

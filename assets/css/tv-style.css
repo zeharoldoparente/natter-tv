@@ -97,7 +97,9 @@ body {
    align-items: center;
    height: 100%;
    white-space: nowrap;
-   animation: scroll-horizontal linear infinite;
+   animation-name: scroll-horizontal;
+   animation-timing-function: linear;
+   animation-iteration-count: infinite;
 }
 
 .rss-item {
@@ -126,13 +128,65 @@ body {
    opacity: 0.8;
 }
 
+/* Melhorias para o sistema RSS */
+.rss-container {
+   position: fixed;
+   left: 0;
+   right: 0;
+   height: 60px;
+   overflow: hidden;
+   z-index: 100;
+   color: #ffffff;
+   font-family: Arial, sans-serif;
+   font-weight: 500;
+}
+
+.rss-container.topo {
+   top: 0;
+}
+
+.rss-container.rodape {
+   bottom: 0;
+}
+
+.rss-ticker {
+   display: flex;
+   align-items: center;
+   height: 100%;
+   white-space: nowrap;
+   padding: 0 20px;
+   will-change: transform;
+   animation-fill-mode: forwards;
+   animation-timing-function: linear;
+   animation-iteration-count: infinite;
+}
+
+.rss-item {
+   display: inline-block;
+   margin: 0;
+   padding: 0;
+   white-space: nowrap;
+}
+
+.rss-separator {
+   display: inline-block;
+   margin: 0 15px;
+   color: rgba(255, 255, 255, 0.6);
+   font-weight: bold;
+}
+
+/* Garantir que as animações sejam removidas adequadamente */
+.rss-ticker[style*="animation: none"] {
+   transform: translateX(0) !important;
+}
+
 /* Animação do scroll */
 @keyframes scroll-horizontal {
    0% {
-      transform: translateX(100%);
+      transform: translateX(0%);
    }
    100% {
-      transform: translateX(-100%);
+      transform: translateX(-50%);
    }
 }
 

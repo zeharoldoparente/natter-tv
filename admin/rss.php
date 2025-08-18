@@ -261,7 +261,7 @@ if ($res) {
                         <label for="velocidade">
                            <i class="fas fa-tachometer-alt"></i> Velocidade do Scroll (px/s)
                         </label>
-                        <input type="number" name="velocidade" id="velocidade" value="50" min="10" max="200">
+                        <input type="number" name="velocidade" id="velocidade" value="50" min="10" max="1000">
                      </div>
                   </div>
 
@@ -376,7 +376,77 @@ if ($res) {
          </div>
       </div>
    </main>
+   <!-- Modal de edição de Feed -->
+   <div id="edit-modal" class="modal">
+      <div class="modal-content">
+         <span class="close" onclick="fecharModal()">&times;</span>
+         <h3><i class="fas fa-edit"></i> Editar Feed RSS</h3>
+         <form method="POST" class="rss-form">
+            <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
+            <input type="hidden" name="feed_id" id="edit-feed-id">
 
+            <div class="form-row">
+               <div class="form-group">
+                  <label for="edit-nome"><i class="fas fa-tag"></i> Nome do Feed</label>
+                  <input type="text" name="nome" id="edit-nome" required>
+               </div>
+
+               <div class="form-group">
+                  <label for="edit-url_feed"><i class="fas fa-link"></i> URL do Feed RSS</label>
+                  <input type="url" name="url_feed" id="edit-url_feed" required>
+               </div>
+            </div>
+
+            <div class="form-row">
+               <div class="form-group">
+                  <label for="edit-codigo_canal"><i class="fas fa-tv"></i> Canal</label>
+                  <select name="codigo_canal" id="edit-codigo_canal">
+                     <option value="TODOS">Todos os Canais</option>
+                     <?php foreach ($canais as $canal): ?>
+                        <option value="<?php echo htmlspecialchars($canal); ?>">Canal <?php echo htmlspecialchars($canal); ?></option>
+                     <?php endforeach; ?>
+                  </select>
+               </div>
+
+               <div class="form-group">
+                  <label for="edit-velocidade"><i class="fas fa-tachometer-alt"></i> Velocidade do Scroll (px/s)</label>
+                  <input type="number" name="velocidade" id="edit-velocidade" min="10" max="1000">
+               </div>
+            </div>
+
+            <div class="form-row">
+               <div class="form-group">
+                  <label for="edit-cor_texto"><i class="fas fa-palette"></i> Cor do Texto</label>
+                  <input type="color" name="cor_texto" id="edit-cor_texto">
+               </div>
+
+               <div class="form-group">
+                  <label for="edit-cor_fundo"><i class="fas fa-fill-drip"></i> Cor do Fundo</label>
+                  <input type="color" name="cor_fundo" id="edit-cor_fundo">
+               </div>
+
+               <div class="form-group">
+                  <label for="edit-posicao"><i class="fas fa-arrows-alt-v"></i> Posição</label>
+                  <select name="posicao" id="edit-posicao">
+                     <option value="rodape">Rodapé</option>
+                     <option value="topo">Topo</option>
+                  </select>
+               </div>
+            </div>
+
+            <div class="form-row">
+               <div class="form-group">
+                  <label><input type="checkbox" name="ativo" id="edit-ativo"> Ativo</label>
+               </div>
+            </div>
+
+            <div class="form-actions">
+               <button type="submit" name="atualizar_feed" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
+               <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            </div>
+         </form>
+      </div>
+   </div>
    <style>
       .rss-form .form-row {
          display: grid;
@@ -435,13 +505,65 @@ if ($res) {
          color: #721c24;
          border: 1px solid #f5c6cb;
       }
+
+      .modal {
+         position: fixed;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         background: rgba(0, 0, 0, 0.5);
+         display: none;
+         align-items: center;
+         justify-content: center;
+         z-index: 1000;
+      }
+
+      .modal.visible {
+         display: flex;
+      }
+
+      .modal-content {
+         background: #fff;
+         padding: 20px;
+         border-radius: 8px;
+         width: 90%;
+         max-width: 600px;
+         max-height: 90vh;
+         overflow-y: auto;
+      }
+
+      .modal .close {
+         float: right;
+         cursor: pointer;
+         font-size: 1.5rem;
+      }
    </style>
 
    <script src="../assets/js/admin.js"></script>
    <script>
+      const feedsData = <?php echo json_encode($feeds); ?>;
+
       function editarFeed(id) {
-         // Implementar modal de edição se necessário
-         alert('Funcionalidade de edição em desenvolvimento');
+         const feed = feedsData.find((f) => f.id == id);
+         if (!feed) return;
+
+         document.getElementById('edit-feed-id').value = feed.id;
+         document.getElementById('edit-nome').value = feed.nome;
+         document.getElementById('edit-url_feed').value = feed.url_feed;
+         document.getElementById('edit-codigo_canal').value = feed.codigo_canal;
+         document.getElementById('edit-velocidade').value = feed.velocidade_scroll;
+         document.getElementById('edit-cor_texto').value = feed.cor_texto;
+         document.getElementById('edit-cor_fundo').value = feed.cor_fundo;
+         document.getElementById('edit-posicao').value = feed.posicao;
+         document.getElementById('edit-ativo').checked = feed.ativo == 1;
+
+         const modal = document.getElementById('edit-modal');
+         modal.classList.add('visible');
+      }
+
+      function fecharModal() {
+         document.getElementById('edit-modal').classList.remove('visible');
       }
    </script>
 </body>

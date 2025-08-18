@@ -6,6 +6,27 @@ header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 include "../includes/db.php";
 include "../includes/functions.php";
 
+// Função para limpar texto RSS de caracteres especiais
+function limparTextoRSS($texto)
+{
+   // Remove caracteres especiais comuns em RSS
+   $texto = str_replace(['•', '●', '◦', '▪', '▫', '‣'], '', $texto);
+
+   // Remove múltiplos espaços e quebras de linha
+   $texto = preg_replace('/\s+/', ' ', $texto);
+
+   // Remove caracteres de controle
+   $texto = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $texto);
+
+   // Limpa HTML entities
+   $texto = html_entity_decode($texto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+   // Remove tags HTML restantes
+   $texto = strip_tags($texto);
+
+   return trim($texto);
+}
+
 try {
    $codigo_canal = '';
    if (isset($_GET['canal']) && !empty($_GET['canal'])) {
@@ -67,10 +88,14 @@ try {
 
    $rss_data = [];
    while ($row = $result->fetch_assoc()) {
+      // Limpar e formatar texto
+      $titulo_limpo = limparTextoRSS($row['titulo']);
+      $descricao_limpa = limparTextoRSS($row['descricao']);
+
       // Formatar texto para exibição
-      $texto_formatado = $row['titulo'];
-      if (!empty($row['descricao']) && strlen($row['titulo']) < 100) {
-         $texto_formatado .= " - " . $row['descricao'];
+      $texto_formatado = $titulo_limpo;
+      if (!empty($descricao_limpa) && strlen($titulo_limpo) < 100) {
+         $texto_formatado .= " - " . $descricao_limpa;
       }
 
       // Limitar tamanho do texto
@@ -80,8 +105,8 @@ try {
 
       $rss_data[] = [
          'id' => (int)$row['id'],
-         'feed_nome' => $row['feed_nome'],
-         'titulo' => $row['titulo'],
+         'feed_nome' => limparTextoRSS($row['feed_nome']),
+         'titulo' => $titulo_limpo,
          'texto' => $texto_formatado,
          'link' => $row['link'],
          'data_publicacao' => $row['data_publicacao'],
