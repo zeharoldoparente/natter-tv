@@ -141,7 +141,7 @@ body {
    position: absolute;
    top: 0;
    right: 0;
-   width: min(400px, 20vw);
+   width: min(350px, 20vw);
    min-width: 280px;
    height: calc(100vh - 60px); /* Ajuste para o RSS */
    z-index: 10;
@@ -152,6 +152,7 @@ body {
 }
 
 .propaganda {
+   width: 350px;
    flex: 1;
 }
 
@@ -174,7 +175,6 @@ body {
 
 .info-branca .data-hora-container {
    background: transparent;
-   padding: clamp(5px, 1vh, 10px) clamp(40px, 6vw, 94px);
 }
 
 .logo-tv {
@@ -201,7 +201,7 @@ body {
    -webkit-background-clip: text;
    -webkit-text-fill-color: transparent;
    background-clip: text;
-   margin-top: clamp(5px, 1vh, 10px);
+   margin-top: 1px;
 }
 
 .data-hora-container {
@@ -209,7 +209,6 @@ body {
    position: relative;
    z-index: 11;
    background: rgb(255, 255, 255);
-   padding: clamp(5px, 1vh, 10px) clamp(40px, 6vw, 94px);
 }
 
 #horario {
@@ -628,150 +627,6 @@ body {
       opacity: 1;
    }
 }
-
-/* Media Queries */
-/* @media (min-width: 2560px) {
-   #sidebar-direita {
-      width: 500px;
-   }
-
-   .logo-tv {
-      padding: 20px 100px;
-   }
-
-   .data-hora-container {
-      padding: 15px 80px;
-   }
-}
-
-@media (max-width: 1920px) and (min-width: 1440px) {
-   #sidebar-direita {
-      width: 485px;
-   }
-}
-
-@media (max-width: 1439px) and (min-width: 1200px) {
-   #sidebar-direita {
-      width: 350px;
-   }
-}
-
-@media (max-width: 1199px) and (min-width: 1024px) {
-   #sidebar-direita {
-      width: 320px;
-   }
-
-   .logo-tv {
-      padding: 8px 50px;
-   }
-
-   .data-hora-container {
-      padding: 8px 40px;
-   }
-}
-
-@media (max-width: 1023px) {
-   #sidebar-direita {
-      width: 280px;
-      min-width: 250px;
-   }
-
-   .logo-tv {
-      padding: 5px 30px;
-   }
-
-   .data-hora-container {
-      padding: 5px 25px;
-   }
-
-   .logo-tv img {
-      width: 100px;
-   }
-
-   .sem-conteudo i {
-      font-size: 3rem;
-   }
-
-   .sem-conteudo h2 {
-      font-size: 2rem;
-   }
-
-   .sem-conteudo p {
-      font-size: 1.1rem;
-   }
-
-   .rss-item {
-      font-size: 14px;
-   }
-}
-
-@media (max-width: 768px) {
-   #sidebar-direita {
-      width: 240px;
-      min-width: 220px;
-   }
-
-   .logo-tv {
-      padding: 5px 20px;
-   }
-
-   .data-hora-container {
-      padding: 5px 15px;
-   }
-
-   .rss-container {
-      height: 50px;
-   }
-
-   .rss-item {
-      font-size: 12px;
-   }
-
-   #media-container {
-      height: calc(100% - 50px);
-   }
-
-   #sidebar-direita {
-      height: calc(100vh - 50px);
-   }
-}
-
-@media (max-height: 600px) {
-   .rss-container {
-      height: 40px;
-   }
-
-   .rss-item {
-      font-size: 11px;
-   }
-
-   #media-container {
-      height: calc(100% - 40px);
-   }
-
-   #sidebar-direita {
-      height: calc(100vh - 40px);
-   }
-}
-
-@media (max-height: 500px) and (orientation: landscape) {
-   #sidebar-direita {
-      width: 200px;
-   }
-
-   .logo-tv {
-      padding: 3px 15px;
-   }
-
-   .data-hora-container {
-      padding: 3px 10px;
-   }
-
-   .logo-tv img {
-      width: 80px;
-   }
-} */
-
 /* Fullscreen */
 :-webkit-full-screen #conteudo-principal {
    background: #000;
