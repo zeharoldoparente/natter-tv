@@ -8,8 +8,11 @@ Sistema completo para gerenciamento de conteúdo em TVs corporativas, desenvolvi
 
 -  Dashboard moderno com estatísticas em tempo real
 -  Upload com drag & drop e preview instantâneo
+-  Upload de conteúdo para a barra lateral (banners/imagens)
 -  Controle remoto das TVs (atualização instantânea)
 -  Sistema completo de logs e auditoria
+-  Gerenciamento de canais e playlists
+-  Cadastro e pré-visualização de feeds RSS
 -  Gerenciamento de usuários e permissões
 
 ### 📺 **TV Display**
@@ -19,6 +22,8 @@ Sistema completo para gerenciamento de conteúdo em TVs corporativas, desenvolvi
 -  Overlay com informações (logo, data/hora)
 -  Controles via teclado (setas, espaço, fullscreen)
 -  Transições suaves entre conteúdos
+-  Exibição de canais específicos selecionados
+-  Barra lateral dinâmica com RSS e anúncios
 
 ### 🔒 **Segurança**
 
@@ -63,6 +68,12 @@ chmod 755 temp/
 -  Admin: `http://seudominio.com/admin/`
 -  TV: `http://seudominio.com/tv/`
 
+5. **(Opcional) Configure o cron para atualizar o RSS**
+
+```bash
+* * * * * php /caminho/para/cron/update_rss.php >/dev/null 2>&1
+```
+
 ### Login Padrão
 
 -  **Usuário:** admin
@@ -77,16 +88,24 @@ tv-corporativa/
 ├── admin/                    # Painel administrativo
 │   ├── dashboard.php         # Dashboard principal
 │   ├── upload.php            # Upload de arquivos
+│   ├── rss.php               # Configuração de feeds RSS
+│   ├── test_rss.php          # Teste de RSS
+│   ├── test_rss_manual.php   # Teste manual de RSS
 │   ├── index.php             # Login
 │   └── logout.php            # Logout
 ├── tv/                       # Interface da TV
 │   ├── index.php             # Player da TV
-|   ├── selecionar_canal.php  # Seleção de canais
-│   └── get_contents.php      # API de conteúdos
+│   ├── selecionar_canal.php  # Seleção de canais
+│   ├── get_contents.php      # API de conteúdos
+│   └── get_rss.php           # API de RSS
 ├── includes/                 # Arquivos do sistema
 │   ├── db.php                # Conexão com banco
 │   ├── functions.php         # Funções auxiliares
+│   ├── rss_functions.php     # Utilidades de RSS
+│   ├── sidebar_content.php   # Conteúdo da barra lateral
 │   └── install_tables.php    # Instalação de tabelas
+├── cron/                     # Rotinas agendadas
+│   └── update_rss.php        # Atualização automática do RSS
 ├── assets/                   # Recursos estáticos
 │   ├── css/                  # Folhas de estilo
 │   └── js/                   # Scripts JavaScript
@@ -117,15 +136,29 @@ tv-corporativa/
 2. A TV verifica atualizações automaticamente a cada 30 segundos
 3. Novos conteúdos aparecem automaticamente sem interromper a reprodução
 
+### Gerenciando Feeds RSS e Barra Lateral
+
+1. Acesse `http://seudominio.com/admin/rss.php`
+2. Informe a URL do feed e salve
+3. Agende o cron `cron/update_rss.php` para atualizar as notícias
+4. O feed aparecerá automaticamente na barra lateral da TV
+
+### Selecionando Canais
+
+1. Na TV, acesse `http://seudominio.com/tv/selecionar_canal.php`
+2. Escolha o canal desejado para iniciar a reprodução
+
 ### Visualizando a TV
 
 1. Acesse `http://seudominio.com/tv/`
 2. A página entrará em fullscreen automaticamente
 3. Use as teclas:
-   -  **Setas:** Navegar entre conteúdos
-   -  **Espaço:** Próximo conteúdo
-   -  **F:** Toggle fullscreen
-   -  **R:** Recarregar
+   -  **Seta Direita** ou **Espaço:** Próximo conteúdo
+   -  **Seta Esquerda:** Conteúdo anterior
+   -  **F:** Alternar fullscreen
+   -  **R:** Recarregar a página
+   -  **C:** Selecionar outro canal
+   -  **U:** Atualizar RSS manualmente
 
 ## ⚙️ Configurações Avançadas
 
