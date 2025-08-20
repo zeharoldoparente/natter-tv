@@ -6,7 +6,10 @@ function initializeUpload() {
    const dropZone = document.getElementById("dropZone");
    const fileInput = document.getElementById("arquivo");
    const uploadForm = document.getElementById("uploadForm");
+   const tipoConteudo = document.getElementById("tipo_conteudo");
    setupDragAndDrop(dropZone, fileInput);
+   tipoConteudo.addEventListener("change", toggleFields);
+   toggleFields();
    fileInput.addEventListener("change", handleFileSelect);
    uploadForm.addEventListener("submit", handleFormSubmit);
 }
@@ -132,9 +135,34 @@ function hideFilePreview() {
    preview.classList.add("hidden");
 }
 
+function toggleFields() {
+   const tipo = document.getElementById("tipo_conteudo").value;
+   const canalGroup = document.getElementById("canalGroup");
+   const codigoInput = document.getElementById("codigo_canal");
+   const durationGroup = document.getElementById("durationGroup");
+   if (tipo === "lateral") {
+      canalGroup.style.display = "none";
+      durationGroup.style.display = "none";
+      codigoInput.removeAttribute("required");
+   } else {
+      canalGroup.style.display = "block";
+      durationGroup.style.display = "flex";
+      codigoInput.setAttribute("required", "required");
+   }
+}
+
 function adjustFormFields(file) {
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
+
+   const tipo = document.getElementById("tipo_conteudo").value;
+   if (tipo === "lateral") {
+      durationGroup.style.display = "none";
+      durationInput.value = 0;
+      durationInput.removeAttribute("required");
+      durationInput.disabled = true;
+      return;
+   }
 
    if (file.type.startsWith("video/")) {
       durationGroup.style.display = "none";

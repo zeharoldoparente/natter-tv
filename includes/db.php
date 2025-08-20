@@ -6,6 +6,11 @@ define('DB_NAME', 'tv_corporativa');
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
 define('TEMP_PATH', __DIR__ . '/../temp/');
 define('MAX_FILE_SIZE', 50 * 1024 * 1024);
+define('SIDEBAR_PATH', __DIR__ . '/../uploads/sidebar/');
+define('SIDEBAR_WEB_PATH', '../uploads/sidebar/');
+if (!is_dir(SIDEBAR_PATH)) {
+   mkdir(SIDEBAR_PATH, 0755, true);
+}
 if (!is_dir(UPLOAD_PATH)) {
    mkdir(UPLOAD_PATH, 0755, true);
 }

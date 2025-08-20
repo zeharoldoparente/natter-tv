@@ -65,7 +65,7 @@ if (empty($conteudos)) {
 
       <div id="sidebar-direita">
          <div class="propaganda">
-            <img src="../assets/images/propaganda.png" alt="Propaganda">
+            <?php include "../includes/sidebar_content.php"; ?>
          </div>
          <div class="info-branca">
             <div class="logo-tv">

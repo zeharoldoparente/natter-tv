@@ -7,6 +7,21 @@ if (!isset($_SESSION['logado'])) {
 include "../includes/db.php";
 include "../includes/functions.php";
 
+// Gerenciar conteúdo lateral
+$sidebar_file = null;
+if (isset($_GET['delete_sidebar'])) {
+   foreach (glob(SIDEBAR_PATH . '*') as $f) {
+      if (is_file($f)) unlink($f);
+   }
+   $mensagem = "Conteúdo lateral excluído com sucesso!";
+}
+$sidebar_files = array_filter(is_dir(SIDEBAR_PATH) ? scandir(SIDEBAR_PATH) : [], function ($f) {
+   return !in_array($f, ['.', '..']);
+});
+if (!empty($sidebar_files)) {
+   $sidebar_file = array_values($sidebar_files)[0];
+}
+
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $id = (int)$_GET['delete'];
 
