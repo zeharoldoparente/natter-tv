@@ -177,405 +177,110 @@ try {
                      placeholder="Ex: 1234" maxlength="10" required
                      pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
                   <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
-            </div>
 
-            <div class="drop-zone" id="dropZone">
-               <div class="drop-zone-content">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <h4>Arraste arquivos aqui ou clique para selecionar</h4>
-                  <p>Formatos aceitos: JPG, PNG, GIF, MP4, AVI, MOV</p>
-                  <p>Tamanho máximo: <?php echo formatFileSize(MAX_FILE_SIZE); ?></p>
-               </div>
-               <input type="file" name="arquivo" id="arquivo" accept="image/*,video/*" required>
-            </div>
 
-            <div id="filePreview" class="file-preview hidden">
-               <div class="preview-content">
-                  <div class="preview-media"></div>
-                  <div class="preview-info">
-                     <h5 id="fileName"></h5>
-                     <p id="fileSize"></p>
-                     <p id="fileType"></p>
+                  <div class="drop-zone" id="dropZone">
+                     <div class="drop-zone-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Arraste arquivos aqui ou clique para selecionar</h4>
+                        <p>Formatos aceitos: JPG, PNG, GIF, MP4, AVI, MOV</p>
+                        <p>Tamanho máximo: <?php echo formatFileSize(MAX_FILE_SIZE); ?></p>
+                     </div>
+                     <input type="file" name="arquivo" id="arquivo" accept="image/*,video/*" required>
                   </div>
-                  <button type="button" class="btn-remove-file" onclick="removeFile()">
-                     <i class="fas fa-times"></i>
-                  </button>
+
+                  <div id="filePreview" class="file-preview hidden">
+                     <div class="preview-content">
+                        <div class="preview-media"></div>
+                        <div class="preview-info">
+                           <h5 id="fileName"></h5>
+                           <p id="fileSize"></p>
+                           <p id="fileType"></p>
+                        </div>
+                        <button type="button" class="btn-remove-file" onclick="removeFile()">
+                           <i class="fas fa-times"></i>
+                        </button>
+                     </div>
+                  </div>
+
+
+                  <div class="form-row">
+                     <div class="form-group" id="durationGroup">
+                        <label for="duracao">
+                           <i class="fas fa-clock"></i>
+                           Duração da Exibição (segundos)
+                        </label>
+                        <input type="number" name="duracao" id="duracao" value="5" min="1" max="300">
+                        <small>Apenas para imagens. Vídeos usam duração natural.</small>
+                     </div>
+                  </div>
+
+
+                  <div class="form-actions">
+                     <button type="submit" class="btn btn-success" id="submitBtn">
+                        <i class="fas fa-upload"></i> Enviar Arquivo
+                     </button>
+                     <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> Limpar
+                     </button>
+                     <a href="dashboard.php" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                     </a>
+                  </div>
+
+                  <div class="progress-container hidden" id="progressContainer">
+                     <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                     </div>
+                     <div class="progress-text" id="progressText">0%</div>
+                  </div>
+               </form>
+            </div>
+         </div>
+         <div class="card">
+            <div class="card-header">
+               <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
+            </div>
+            <div class="card-body">
+               <div class="instructions">
+                  <div class="instruction-item">
+                     <i class="fas fa-tv text-success"></i>
+                     <div>
+                        <h5>Códigos de Canal</h5>
+                        <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
+                     </div>
+                  </div>
+
+                  <div class="instruction-item">
+                     <i class="fas fa-image text-info"></i>
+                     <div>
+                        <h5>Imagens</h5>
+                        <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
+                     </div>
+                  </div>
+
+                  <div class="instruction-item">
+                     <i class="fas fa-video text-warning"></i>
+                     <div>
+                        <h5>Vídeos</h5>
+                        <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
+                     </div>
+                  </div>
+
+                  <div class="instruction-item">
+                     <i class="fas fa-desktop text-primary"></i>
+                     <div>
+                        <h5>Visualização na TV</h5>
+                        <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
+                     </div>
+                  </div>
                </div>
             </div>
-
-            <div class="form-row">
-               <div class="form-group" id="durationGroup">
-                  <label for="duracao">
-                     <i class="fas fa-clock"></i>
-                     Duração da Exibição (segundos)
-                  </label>
-                  <input type="number" name="duracao" id="duracao" value="5" min="1" max="300">
-                  <small>Apenas para imagens. Vídeos usam duração natural.</small>
-               </div>
-            </div>
-
-            <div class="form-actions">
-               <button type="submit" class="btn btn-success" id="submitBtn">
-                  <i class="fas fa-upload"></i> Enviar Arquivo
-               </button>
-               <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                  <i class="fas fa-undo"></i> Limpar
-               </button>
-               <a href="dashboard.php" class="btn btn-outline">
-                  <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
-               </a>
-            </div>
-
-            <div class="progress-container hidden" id="progressContainer">
-               <div class="progress-bar">
-                  <div class="progress-fill" id="progressFill"></div>
-               </div>
-               <div class="progress-text" id="progressText">0%</div>
-            </div>
-            </form>
          </div>
       </div>
 
-      <div class="card">
-         <div class="card-header">
-            <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
-         </div>
-         <div class="card-body">
-            <div class="instructions">
-               <div class="instruction-item">
-                  <i class="fas fa-tv text-success"></i>
-                  <div>
-                     <h5>Códigos de Canal</h5>
-                     <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
-                  </div>
-               </div>
-
-               <div class="instruction-item">
-                  <i class="fas fa-image text-info"></i>
-                  <div>
-                     <h5>Imagens</h5>
-                     <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
-                  </div>
-               </div>
-
-               <div class="instruction-item">
-                  <i class="fas fa-video text-warning"></i>
-                  <div>
-                     <h5>Vídeos</h5>
-                     <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
-                  </div>
-               </div>
-
-               <div class="instruction-item">
-                  <i class="fas fa-desktop text-primary"></i>
-                  <div>
-                     <h5>Visualização na TV</h5>
-                     <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
       </div>
    </main>
-
-   <style>
-      .channels-stats {
-         display: grid;
-         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-         gap: 20px;
-      }
-
-      .channel-stat {
-         background: #f8f9fa;
-         border-radius: 8px;
-         padding: 20px;
-         border-left: 4px solid var(--green-color);
-      }
-
-      .channel-header h4 {
-         margin: 0 0 15px 0;
-         color: var(--green-color);
-         font-size: 1.1rem;
-      }
-
-      .channel-info {
-         display: flex;
-         flex-wrap: wrap;
-         gap: 15px;
-      }
-
-      .channel-info span {
-         display: flex;
-         align-items: center;
-         gap: 8px;
-         font-size: 0.9rem;
-         color: #666;
-      }
-
-      .channel-info i {
-         color: var(--primary-color);
-      }
-
-      .form-group input[name="codigo_canal"] {
-         text-transform: uppercase;
-         font-weight: 600;
-         font-family: 'Courier New', monospace;
-      }
-
-      /* Restante do CSS já existente */
-      .stats-grid {
-         display: grid;
-         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-         gap: 20px;
-         margin-bottom: 30px;
-      }
-
-      .stat-card {
-         background: white;
-         padding: 20px;
-         border-radius: 10px;
-         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-         display: flex;
-         align-items: center;
-         gap: 15px;
-         transition: transform 0.2s ease;
-      }
-
-      .stat-card:hover {
-         transform: translateY(-2px);
-         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      }
-
-      .stat-icon {
-         width: 50px;
-         height: 50px;
-         border-radius: 10px;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         background: var(--green-color);
-         color: white;
-         font-size: 1.5rem;
-      }
-
-      .stat-info h3 {
-         margin: 0;
-         font-size: 1.8rem;
-         font-weight: 600;
-         color: var(--green-color);
-      }
-
-      .stat-info p {
-         margin: 5px 0 0 0;
-         color: #666;
-         font-size: 0.9rem;
-      }
-
-      .drop-zone {
-         position: relative;
-         border: 3px dashed #ddd;
-         border-radius: 10px;
-         padding: 40px 20px;
-         text-align: center;
-         transition: all 0.3s ease;
-         margin-bottom: 20px;
-         cursor: pointer;
-      }
-
-      .drop-zone:hover,
-      .drop-zone.dragover {
-         border-color: var(--secondary-color);
-         background: rgba(52, 152, 219, 0.05);
-      }
-
-      .drop-zone input[type="file"] {
-         position: absolute;
-         top: 0;
-         left: 0;
-         width: 100%;
-         height: 100%;
-         opacity: 0;
-         cursor: pointer;
-      }
-
-      .drop-zone-content i {
-         font-size: 3rem;
-         color: #ddd;
-         margin-bottom: 15px;
-      }
-
-      .drop-zone-content h4 {
-         margin-bottom: 10px;
-         color: var(--primary-color);
-      }
-
-      .drop-zone-content p {
-         margin: 5px 0;
-         color: #666;
-         font-size: 0.9rem;
-      }
-
-      .file-preview {
-         border: 2px solid #e1e8ed;
-         border-radius: 10px;
-         padding: 20px;
-         margin-bottom: 20px;
-      }
-
-      .preview-content {
-         display: flex;
-         align-items: center;
-         gap: 20px;
-         position: relative;
-      }
-
-      .preview-media {
-         flex-shrink: 0;
-      }
-
-      .preview-media img,
-      .preview-media video {
-         width: 100px;
-         height: 80px;
-         object-fit: cover;
-         border-radius: 6px;
-         border: 2px solid #ddd;
-      }
-
-      .preview-info {
-         flex-grow: 1;
-      }
-
-      .preview-info h5 {
-         margin: 0 0 5px 0;
-         color: var(--primary-color);
-      }
-
-      .preview-info p {
-         margin: 2px 0;
-         color: #666;
-         font-size: 0.9rem;
-      }
-
-      .btn-remove-file {
-         position: absolute;
-         top: -10px;
-         right: -10px;
-         width: 30px;
-         height: 30px;
-         border-radius: 50%;
-         background: var(--danger-color);
-         color: white;
-         border: none;
-         cursor: pointer;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-      }
-
-      .form-row {
-         display: grid;
-         grid-template-columns: 1fr;
-         gap: 20px;
-      }
-
-      .form-actions {
-         display: flex;
-         gap: 10px;
-         flex-wrap: wrap;
-         margin-top: 20px;
-      }
-
-      .btn-outline {
-         background: transparent;
-         border: 2px solid var(--primary-color);
-         color: var(--primary-color);
-      }
-
-      .btn-outline:hover {
-         background: var(--primary-color);
-         color: white;
-      }
-
-      .progress-container {
-         margin-top: 20px;
-      }
-
-      .progress-bar {
-         width: 100%;
-         height: 10px;
-         background: #f0f0f0;
-         border-radius: 5px;
-         overflow: hidden;
-      }
-
-      .progress-fill {
-         height: 100%;
-         background: var(--success-color);
-         width: 0%;
-         transition: width 0.3s ease;
-      }
-
-      .progress-text {
-         text-align: center;
-         margin-top: 10px;
-         font-weight: 600;
-         color: var(--primary-color);
-      }
-
-      .instructions {
-         display: grid;
-         gap: 20px;
-      }
-
-      .instruction-item {
-         display: flex;
-         align-items: flex-start;
-         gap: 15px;
-         padding: 15px;
-         background: #f8f9fa;
-         border-radius: 8px;
-      }
-
-      .instruction-item i {
-         font-size: 1.5rem;
-         margin-top: 2px;
-      }
-
-      .instruction-item h5 {
-         margin: 0 0 5px 0;
-         color: var(--primary-color);
-      }
-
-      .instruction-item p {
-         margin: 0;
-         color: #666;
-         font-size: 0.9rem;
-      }
-
-      .text-info {
-         color: var(--info-color) !important;
-      }
-
-      .text-warning {
-         color: var(--warning-color) !important;
-      }
-
-      .text-success {
-         color: var(--success-color) !important;
-      }
-
-      .text-primary {
-         color: var(--primary-color) !important;
-      }
-
-      .alert-error {
-         background: #f8d7da;
-         color: #721c24;
-         border: 1px solid #f5c6cb;
-      }
-   </style>
 
    <script src="../assets/js/upload.js"></script>
    <script>
