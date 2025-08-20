@@ -5,7 +5,7 @@ $files = [];
 if (is_dir(SIDEBAR_PATH)) {
    $files = array_values(array_filter(scandir(SIDEBAR_PATH), function ($f) use ($allowed) {
       $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
-      return !is_dir($f) && in_array($ext, $allowed);
+      return !is_dir(SIDEBAR_PATH . $f) && in_array($ext, $allowed);
    }));
 }
 if (!empty($files)) {
@@ -13,9 +13,25 @@ if (!empty($files)) {
    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
    $src = SIDEBAR_WEB_PATH . $file;
    if (in_array($ext, ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'])) {
-      echo '<video src="' . $src . '" autoplay muted loop></video>';
+      echo '<video src="' . $src . '" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>';
    } else {
-      echo '<img src="' . $src . '" alt="Propaganda">';
+      if ($ext === 'webp' && (!isset($_SERVER['HTTP_ACCEPT']) || strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') === false)) {
+         $originalPath = SIDEBAR_PATH . $file;
+         if (function_exists('imagecreatefromwebp')) {
+            $jpegPath = SIDEBAR_PATH . pathinfo($file, PATHINFO_FILENAME) . '.jpg';
+            if (!file_exists($jpegPath)) {
+               $img = imagecreatefromwebp($originalPath);
+               imagejpeg($img, $jpegPath, 90);
+               imagedestroy($img);
+            }
+            $jpegSrc = SIDEBAR_WEB_PATH . basename($jpegPath);
+            echo '<img src="' . $jpegSrc . '" alt="Propaganda">';
+         } else {
+            echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
+         }
+      } else {
+         echo '<img src="' . $src . '" alt="Propaganda">';
+      }
    }
 } else {
    echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
