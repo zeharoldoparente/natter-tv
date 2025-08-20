@@ -312,3 +312,242 @@ function verificarTokenCSRF($token)
 
    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+function processarUploadLateral($arquivo, $descricao = '')
+{
+   global $conn;
+
+   if ($arquivo['error'] !== UPLOAD_ERR_OK) {
+      throw new Exception('Erro no upload do arquivo: ' . $arquivo['error']);
+   }
+
+   if ($arquivo['size'] > MAX_FILE_SIZE) {
+      throw new Exception('Arquivo muito grande. Máximo: ' . formatFileSize(MAX_FILE_SIZE));
+   }
+
+   $tipo = getFileType($arquivo['name']);
+   if ($tipo === 'desconhecido') {
+      throw new Exception('Tipo de arquivo não permitido');
+   }
+
+   // Criar nome único para o arquivo
+   $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+   $nomeArquivo = 'sidebar_' . time() . '_' . uniqid() . '.' . $extensao;
+   $caminhoCompleto = SIDEBAR_PATH . $nomeArquivo;
+
+   // Mover arquivo para pasta de sidebar
+   if (!move_uploaded_file($arquivo['tmp_name'], $caminhoCompleto)) {
+      throw new Exception('Erro ao salvar arquivo');
+   }
+
+   // Obter dimensões se for imagem
+   $dimensoes = '';
+   if ($tipo === 'imagem') {
+      $info = getimagesize($caminhoCompleto);
+      if ($info) {
+         $dimensoes = $info[0] . 'x' . $info[1];
+      }
+   }
+
+   $usuarioId = $_SESSION['usuario_id'] ?? null;
+
+   // Inserir no banco de dados
+   $stmt = $conn->prepare("
+        INSERT INTO conteudos_laterais 
+        (arquivo, nome_original, tipo, tamanho, dimensoes, usuario_upload, descricao) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+
+   $stmt->bind_param(
+      "sssisss",
+      $nomeArquivo,
+      $arquivo['name'],
+      $tipo,
+      $arquivo['size'],
+      $dimensoes,
+      $usuarioId,
+      $descricao
+   );
+
+   if (!$stmt->execute()) {
+      unlink($caminhoCompleto);
+      throw new Exception('Erro ao salvar informações no banco');
+   }
+
+   $conteudoId = $conn->insert_id;
+   $stmt->close();
+
+   registrarLog('upload_lateral', "Upload de conteúdo lateral: {$arquivo['name']} ({$tipo})");
+
+   return $conteudoId;
+}
+
+/**
+ * Ativa um conteúdo lateral específico
+ */
+function ativarConteudoLateral($id)
+{
+   global $conn;
+
+   // Verificar se o conteúdo existe
+   $stmt = $conn->prepare("SELECT arquivo, nome_original FROM conteudos_laterais WHERE id = ?");
+   $stmt->bind_param("i", $id);
+   $stmt->execute();
+   $result = $stmt->get_result();
+
+   if (!$row = $result->fetch_assoc()) {
+      throw new Exception('Conteúdo lateral não encontrado');
+   }
+
+   $stmt->close();
+
+   // Verificar se o arquivo ainda existe
+   $caminhoArquivo = SIDEBAR_PATH . $row['arquivo'];
+   if (!file_exists($caminhoArquivo)) {
+      throw new Exception('Arquivo não encontrado no servidor');
+   }
+
+   // Desativar conteúdo lateral atual
+   $conn->query("UPDATE conteudos_laterais SET ativo = 0, data_desativacao = NOW() WHERE ativo = 1");
+
+   // Remover arquivos antigos da pasta ativa (manter compatibilidade)
+   foreach (glob(SIDEBAR_PATH . '*') as $f) {
+      if (is_file($f) && basename($f) !== $row['arquivo']) {
+         unlink($f);
+      }
+   }
+
+   // Ativar o novo conteúdo
+   $stmt = $conn->prepare("UPDATE conteudos_laterais SET ativo = 1, data_ativacao = NOW() WHERE id = ?");
+   $stmt->bind_param("i", $id);
+   $stmt->execute();
+   $stmt->close();
+
+   registrarLog('ativar_lateral', "Conteúdo lateral ativado: {$row['nome_original']}");
+   sinalizarAtualizacaoTV();
+
+   return true;
+}
+
+/**
+ * Exclui um conteúdo lateral
+ */
+function excluirConteudoLateral($id)
+{
+   global $conn;
+
+   $stmt = $conn->prepare("SELECT arquivo, nome_original, ativo FROM conteudos_laterais WHERE id = ?");
+   $stmt->bind_param("i", $id);
+   $stmt->execute();
+   $result = $stmt->get_result();
+
+   if ($row = $result->fetch_assoc()) {
+      $arquivo = $row['arquivo'];
+      $nomeOriginal = $row['nome_original'];
+      $eraAtivo = $row['ativo'];
+
+      // Remover arquivo físico
+      $caminhoArquivo = SIDEBAR_PATH . $arquivo;
+      if (file_exists($caminhoArquivo)) {
+         unlink($caminhoArquivo);
+      }
+
+      // Remover do banco
+      $deleteStmt = $conn->prepare("DELETE FROM conteudos_laterais WHERE id = ?");
+      $deleteStmt->bind_param("i", $id);
+      $deleteStmt->execute();
+      $deleteStmt->close();
+
+      registrarLog('delete_lateral', "Conteúdo lateral excluído: {$nomeOriginal}");
+
+      // Se era o conteúdo ativo, sinalizar atualização
+      if ($eraAtivo) {
+         sinalizarAtualizacaoTV();
+      }
+
+      $stmt->close();
+      return true;
+   }
+
+   $stmt->close();
+   return false;
+}
+
+/**
+ * Busca todos os conteúdos laterais
+ */
+function buscarConteudosLaterais($apenasAtivos = false)
+{
+   global $conn;
+
+   $sql = "SELECT cl.*, u.nome as usuario_nome 
+            FROM conteudos_laterais cl 
+            LEFT JOIN usuarios u ON cl.usuario_upload = u.id";
+
+   if ($apenasAtivos) {
+      $sql .= " WHERE cl.ativo = 1";
+   }
+
+   $sql .= " ORDER BY cl.ativo DESC, cl.data_upload DESC";
+
+   $result = $conn->query($sql);
+
+   $conteudos = [];
+   while ($row = $result->fetch_assoc()) {
+      $conteudos[] = $row;
+   }
+
+   return $conteudos;
+}
+
+/**
+ * Busca o conteúdo lateral ativo
+ */
+function buscarConteudoLateralAtivo()
+{
+   global $conn;
+
+   $stmt = $conn->prepare("SELECT * FROM conteudos_laterais WHERE ativo = 1 LIMIT 1");
+   $stmt->execute();
+   $result = $stmt->get_result();
+
+   $conteudo = $result->fetch_assoc();
+   $stmt->close();
+
+   return $conteudo;
+}
+
+/**
+ * Atualiza descrição de um conteúdo lateral
+ */
+function atualizarDescricaoLateral($id, $descricao)
+{
+   global $conn;
+
+   $stmt = $conn->prepare("UPDATE conteudos_laterais SET descricao = ? WHERE id = ?");
+   $stmt->bind_param("si", $descricao, $id);
+   $result = $stmt->execute();
+   $stmt->close();
+
+   if ($result) {
+      registrarLog('update_lateral', "Descrição atualizada para conteúdo lateral ID: {$id}");
+   }
+
+   return $result;
+}
+
+/**
+ * Desativa todos os conteúdos laterais
+ */
+function desativarTodosConteudosLaterais()
+{
+   global $conn;
+
+   $result = $conn->query("UPDATE conteudos_laterais SET ativo = 0, data_desativacao = NOW() WHERE ativo = 1");
+
+   if ($result) {
+      registrarLog('desativar_lateral', "Todos os conteúdos laterais foram desativados");
+      sinalizarAtualizacaoTV();
+   }
+
+   return $result;
+}

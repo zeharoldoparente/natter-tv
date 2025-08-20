@@ -16,36 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
       if (!isset($_POST['csrf_token']) || !verificarTokenCSRF($_POST['csrf_token'])) {
          throw new Exception('Token de segurança inválido');
       }
-      $tipo_conteudo = $_POST['tipo_conteudo'] ?? 'principal';
 
-      if ($tipo_conteudo === 'lateral') {
-         $tipoArquivo = getFileType($_FILES['arquivo']['name']);
-         if ($tipoArquivo === 'desconhecido') {
-            throw new Exception('Tipo de arquivo não permitido');
-         }
-         foreach (glob(SIDEBAR_PATH . '*') as $f) {
-            if (is_file($f)) unlink($f);
-         }
-         $extensao = strtolower(pathinfo($_FILES['arquivo']['name'], PATHINFO_EXTENSION));
-         $nomeArquivo = 'sidebar_' . time() . '.' . $extensao;
-         $destino = SIDEBAR_PATH . $nomeArquivo;
-         if (!move_uploaded_file($_FILES['arquivo']['tmp_name'], $destino)) {
-            throw new Exception('Erro ao salvar arquivo lateral');
-         }
-         $mensagem = 'Conteúdo lateral atualizado com sucesso!';
+      $duracao = (int)$_POST['duracao'] ?? 5;
+      $duracao = max(1, min(300, $duracao));
+      $codigo_canal = sanitizarEntrada($_POST['codigo_canal'] ?? '0000');
+
+      if (empty($codigo_canal)) {
+         $codigo_canal = '0000';
+      }
+
+      $conteudoId = processarUpload($_FILES['arquivo'], $duracao, $codigo_canal);
+      if ($conteudoId) {
+         $mensagem = "Arquivo enviado com sucesso para o canal {$codigo_canal}!";
          sinalizarAtualizacaoTV();
-      } else {
-         $duracao = (int)$_POST['duracao'] ?? 5;
-         $duracao = max(1, min(300, $duracao));
-         $codigo_canal = sanitizarEntrada($_POST['codigo_canal'] ?? '0000');
-         if (empty($codigo_canal)) {
-            $codigo_canal = '0000';
-         }
-         $conteudoId = processarUpload($_FILES['arquivo'], $duracao, $codigo_canal);
-         if ($conteudoId) {
-            $mensagem = "Arquivo enviado com sucesso para o canal {$codigo_canal}!";
-            sinalizarAtualizacaoTV();
-         }
       }
    } catch (Exception $e) {
       $erro = $e->getMessage();
@@ -81,7 +64,7 @@ try {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Upload de Arquivos - NatterTV</title>
+   <title>Upload de Conteúdo Principal - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
@@ -97,6 +80,7 @@ try {
          <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
          <li class="active"><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
          <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
+         <li><a href="sidebar.php"><i class="fas fa-th-large"></i> Conteúdo Lateral</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
@@ -104,7 +88,7 @@ try {
 
    <main class="main-content">
       <header class="topbar">
-         <h1><i class="fas fa-upload"></i> Upload de Arquivos</h1>
+         <h1><i class="fas fa-upload"></i> Upload de Conteúdo Principal</h1>
          <div class="user-info">
             <span>Bem-vindo, <?php echo $_SESSION['nome'] ?? 'Admin'; ?>!</span>
          </div>
@@ -123,7 +107,7 @@ try {
             </div>
          <?php endif; ?>
 
-         <!-- NOVO: Estatísticas por Canal -->
+         <!-- Estatísticas por Canal -->
          <?php if (!empty($stats)): ?>
             <div class="card">
                <div class="card-header">
@@ -151,33 +135,23 @@ try {
 
          <div class="card">
             <div class="card-header">
-               <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Arquivo</h3>
+               <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo</h3>
             </div>
             <div class="card-body">
                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
+
+                  <!-- Campo para código do canal -->
                   <div class="form-group">
-                     <label for="tipo_conteudo">
-                        <i class="fas fa-align-left"></i>
-                        Tipo de Conteúdo
+                     <label for="codigo_canal">
+                        <i class="fas fa-tv"></i>
+                        Código do Canal
                      </label>
-                     <select name="tipo_conteudo" id="tipo_conteudo">
-                        <option value="principal">Conteúdo principal</option>
-                        <option value="lateral">Conteúdo lateral</option>
-                     </select>
+                     <input type="text" name="codigo_canal" id="codigo_canal"
+                        placeholder="Ex: 1234" maxlength="10" required
+                        pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
+                     <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
                   </div>
-
-                  <!-- NOVO: Campo para código do canal -->
-                  <div class="form-group" id="canalGroup"></div>
-                  <label for="codigo_canal">
-                     <i class="fas fa-tv"></i>
-                     Código do Canal
-                  </label>
-                  <input type="text" name="codigo_canal" id="codigo_canal"
-                     placeholder="Ex: 1234" maxlength="10" required
-                     pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
-                  <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
-
 
                   <div class="drop-zone" id="dropZone">
                      <div class="drop-zone-content">
@@ -203,18 +177,14 @@ try {
                      </div>
                   </div>
 
-
-                  <div class="form-row">
-                     <div class="form-group" id="durationGroup">
-                        <label for="duracao">
-                           <i class="fas fa-clock"></i>
-                           Duração da Exibição (segundos)
-                        </label>
-                        <input type="number" name="duracao" id="duracao" value="5" min="1" max="300">
-                        <small>Apenas para imagens. Vídeos usam duração natural.</small>
-                     </div>
+                  <div class="form-group" id="durationGroup">
+                     <label for="duracao">
+                        <i class="fas fa-clock"></i>
+                        Duração da Exibição (segundos)
+                     </label>
+                     <input type="number" name="duracao" id="duracao" value="5" min="1" max="300">
+                     <small>Apenas para imagens. Vídeos usam duração natural.</small>
                   </div>
-
 
                   <div class="form-actions">
                      <button type="submit" class="btn btn-success" id="submitBtn">
@@ -237,6 +207,7 @@ try {
                </form>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
@@ -274,11 +245,17 @@ try {
                         <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
                      </div>
                   </div>
+
+                  <div class="instruction-item">
+                     <i class="fas fa-th-large text-warning"></i>
+                     <div>
+                        <h5>Conteúdo Lateral</h5>
+                        <p>Para gerenciar propagandas e conteúdo da sidebar, use a página <a href="sidebar.php">Conteúdo Lateral</a></p>
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
-      </div>
-
       </div>
    </main>
 

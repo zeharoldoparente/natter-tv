@@ -1,318 +1,360 @@
 document.addEventListener("DOMContentLoaded", function () {
-   initializeFileUpload();
-   initializeTableFeatures();
-   initializeAlerts();
-   initializeTVControl();
+   initializeUpload();
 });
-function initializeFileUpload() {
+
+function initializeUpload() {
+   const dropZone = document.getElementById("dropZone");
    const fileInput = document.getElementById("arquivo");
+   const uploadForm = document.getElementById("uploadForm");
 
-   if (fileInput) {
-      fileInput.addEventListener("change", function (e) {
-         const file = e.target.files[0];
+   setupDragAndDrop(dropZone, fileInput);
+   fileInput.addEventListener("change", handleFileSelect);
+   uploadForm.addEventListener("submit", handleFormSubmit);
+}
 
-         if (file) {
-            createFilePreview(file);
-            adjustDurationField(file);
-         }
-      });
+function setupDragAndDrop(dropZone, fileInput) {
+   ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+      document.body.addEventListener(eventName, preventDefaults, false);
+   });
+
+   ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, highlight, false);
+   });
+
+   ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, unhighlight, false);
+   });
+
+   dropZone.addEventListener("drop", handleDrop, false);
+
+   function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+   }
+
+   function highlight(e) {
+      dropZone.classList.add("dragover");
+   }
+
+   function unhighlight(e) {
+      dropZone.classList.remove("dragover");
+   }
+
+   function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+
+      if (files.length > 0) {
+         fileInput.files = files;
+         handleFileSelect({ target: { files: files } });
+      }
    }
 }
 
-function createFilePreview(file) {
-   const previewContainer = document.getElementById("preview-container");
+function handleFileSelect(e) {
+   const file = e.target.files[0];
 
-   if (!previewContainer) {
-      const container = document.createElement("div");
-      container.id = "preview-container";
-      container.style.marginTop = "15px";
-      container.style.textAlign = "center";
-
-      const fileInput = document.getElementById("arquivo");
-      fileInput.parentNode.appendChild(container);
+   if (!file) {
+      hideFilePreview();
+      return;
    }
 
-   const container = document.getElementById("preview-container");
-   container.innerHTML = "";
+   if (!validateFile(file)) {
+      return;
+   }
+
+   showFilePreview(file);
+   adjustFormFields(file);
+}
+
+function validateFile(file) {
+   const maxSize = 52428800; // 50MB
+   const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "video/mp4",
+      "video/avi",
+      "video/mov",
+      "video/wmv",
+   ];
+
+   if (file.size > maxSize) {
+      showAlert("Arquivo muito grande! Máximo permitido: 50MB", "error");
+      resetFileInput();
+      return false;
+   }
+
+   if (!allowedTypes.includes(file.type)) {
+      showAlert("Tipo de arquivo não permitido!", "error");
+      resetFileInput();
+      return false;
+   }
+
+   return true;
+}
+
+function showFilePreview(file) {
+   const preview = document.getElementById("filePreview");
+   const mediaContainer = preview.querySelector(".preview-media");
+   const fileName = document.getElementById("fileName");
+   const fileSize = document.getElementById("fileSize");
+   const fileType = document.getElementById("fileType");
+
+   mediaContainer.innerHTML = "";
+   fileName.textContent = file.name;
+   fileSize.textContent = formatFileSize(file.size);
+   fileType.textContent = getFileTypeLabel(file.type);
 
    const reader = new FileReader();
 
    reader.onload = function (e) {
-      let previewElement;
+      let mediaElement;
 
       if (file.type.startsWith("image/")) {
-         previewElement = document.createElement("img");
-         previewElement.src = e.target.result;
-         previewElement.style.maxWidth = "200px";
-         previewElement.style.maxHeight = "150px";
-         previewElement.style.border = "2px solid #ddd";
-         previewElement.style.borderRadius = "6px";
+         mediaElement = document.createElement("img");
+         mediaElement.src = e.target.result;
       } else if (file.type.startsWith("video/")) {
-         previewElement = document.createElement("video");
-         previewElement.src = e.target.result;
-         previewElement.controls = true;
-         previewElement.style.maxWidth = "200px";
-         previewElement.style.maxHeight = "150px";
-         previewElement.style.border = "2px solid #ddd";
-         previewElement.style.borderRadius = "6px";
+         mediaElement = document.createElement("video");
+         mediaElement.src = e.target.result;
+         mediaElement.controls = true;
+         mediaElement.muted = true;
       }
 
-      if (previewElement) {
-         const label = document.createElement("p");
-         label.textContent = `Preview: ${file.name}`;
-         label.style.marginBottom = "10px";
-         label.style.fontWeight = "bold";
-         label.style.color = "#2c3e50";
-
-         container.appendChild(label);
-         container.appendChild(previewElement);
+      if (mediaElement) {
+         mediaContainer.appendChild(mediaElement);
       }
    };
 
    reader.readAsDataURL(file);
+   preview.classList.remove("hidden");
 }
-function adjustDurationField(file) {
-   const duracaoInput = document.getElementById("duracao");
-   const duracaoGroup = duracaoInput.closest(".form-group");
+
+function hideFilePreview() {
+   const preview = document.getElementById("filePreview");
+   preview.classList.add("hidden");
+}
+
+function adjustFormFields(file) {
+   const durationGroup = document.getElementById("durationGroup");
+   const durationInput = document.getElementById("duracao");
 
    if (file.type.startsWith("video/")) {
-      duracaoGroup.style.display = "none";
-      duracaoInput.value = 0;
+      durationGroup.style.display = "none";
+      durationInput.value = 0;
+      durationInput.removeAttribute("required");
+      durationInput.disabled = true;
    } else {
-      duracaoGroup.style.display = "flex";
-      if (duracaoInput.value == 0) {
-         duracaoInput.value = 5;
+      durationGroup.style.display = "flex";
+      durationInput.disabled = false;
+      durationInput.setAttribute("required", "required");
+      if (durationInput.value == 0) {
+         durationInput.value = 5;
       }
    }
 }
 
-function initializeTableFeatures() {
-   const previewVideos = document.querySelectorAll(".preview-video");
+function handleFormSubmit(e) {
+   e.preventDefault();
 
-   previewVideos.forEach((video) => {
-      video.addEventListener("mouseenter", function () {
-         this.play();
-      });
+   const fileInput = document.getElementById("arquivo");
+   const codigoCanalInput = document.getElementById("codigo_canal");
+   const submitBtn = document.getElementById("submitBtn");
+   const progressContainer = document.getElementById("progressContainer");
 
-      video.addEventListener("mouseleave", function () {
-         this.pause();
-         this.currentTime = 0;
-      });
-   });
-   const deleteButtons = document.querySelectorAll('a[href*="delete"]');
-
-   deleteButtons.forEach((button) => {
-      button.addEventListener("click", function (e) {
-         e.preventDefault();
-
-         const confirmDelete = confirm(
-            "Tem certeza que deseja excluir este arquivo?\n\n" +
-               "Esta ação não pode ser desfeita e o arquivo será removido permanentemente."
-         );
-
-         if (confirmDelete) {
-            this.classList.add("loading");
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            setTimeout(() => {
-               window.location.href = this.getAttribute("href");
-            }, 500);
-         }
-      });
-   });
-}
-function initializeAlerts() {
-   const alerts = document.querySelectorAll(".alert");
-
-   alerts.forEach((alert) => {
-      const closeButton = document.createElement("button");
-      closeButton.innerHTML = "&times;";
-      closeButton.style.cssText = `
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            margin-left: auto;
-            color: inherit;
-            opacity: 0.7;
-        `;
-
-      closeButton.addEventListener("click", function () {
-         alert.style.animation = "fadeOut 0.3s ease-out";
-         setTimeout(() => alert.remove(), 300);
-      });
-
-      alert.appendChild(closeButton);
-      setTimeout(() => {
-         if (alert.parentNode) {
-            alert.style.animation = "fadeOut 0.3s ease-out";
-            setTimeout(() => alert.remove(), 300);
-         }
-      }, 5000);
-   });
-}
-function initializeTVControl() {
-   const updateTVButton = document.querySelector('button[name="atualizar_tv"]');
-
-   if (updateTVButton) {
-      updateTVButton.addEventListener("click", function (e) {
-         e.preventDefault();
-         this.classList.add("loading");
-         this.disabled = true;
-         fetch(window.location.href, {
-            method: "POST",
-            headers: {
-               "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: "atualizar_tv=1",
-         })
-            .then((response) => response.text())
-            .then((data) => {
-               this.classList.remove("loading");
-               this.disabled = false;
-               showNotification(
-                  "Sinal de atualização enviado para as TVs!",
-                  "success"
-               );
-               setTimeout(() => {
-                  window.location.reload();
-               }, 1000);
-            })
-            .catch((error) => {
-               console.error("Erro:", error);
-               this.classList.remove("loading");
-               this.disabled = false;
-               showNotification("Erro ao enviar sinal de atualização", "error");
-            });
-      });
+   // Validações
+   if (!fileInput.files[0]) {
+      showAlert("Por favor, selecione um arquivo", "error");
+      return;
    }
+
+   if (!codigoCanalInput.value.trim()) {
+      showAlert("Por favor, digite o código do canal", "error");
+      codigoCanalInput.focus();
+      return;
+   }
+
+   const formData = new FormData(e.target);
+
+   // Estado de loading
+   submitBtn.disabled = true;
+   submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+   progressContainer.classList.remove("hidden");
+
+   const xhr = new XMLHttpRequest();
+
+   // Progress do upload
+   xhr.upload.addEventListener("progress", function (e) {
+      if (e.lengthComputable) {
+         const percentComplete = (e.loaded / e.total) * 100;
+         updateProgress(percentComplete);
+      }
+   });
+
+   // Sucesso
+   xhr.addEventListener("load", function () {
+      if (xhr.status === 200) {
+         showAlert("Arquivo enviado com sucesso!", "success");
+         resetForm();
+         setTimeout(() => {
+            window.location.reload();
+         }, 2000);
+      } else {
+         showAlert("Erro ao enviar arquivo", "error");
+      }
+      resetUploadState();
+   });
+
+   // Erro
+   xhr.addEventListener("error", function () {
+      showAlert("Erro de conexão ao enviar arquivo", "error");
+      resetUploadState();
+   });
+
+   xhr.open("POST", "upload.php");
+   xhr.send(formData);
 }
 
-function showNotification(message, type = "info") {
-   const notification = document.createElement("div");
-   notification.className = `notification notification-${type}`;
-   notification.innerHTML = `
-        <i class="fas fa-${
-           type === "success"
-              ? "check-circle"
-              : type === "error"
-              ? "exclamation-circle"
-              : "info-circle"
-        }"></i>
-        ${message}
+function updateProgress(percent) {
+   const progressFill = document.getElementById("progressFill");
+   const progressText = document.getElementById("progressText");
+
+   progressFill.style.width = percent + "%";
+   progressText.textContent = Math.round(percent) + "%";
+}
+
+function resetUploadState() {
+   const submitBtn = document.getElementById("submitBtn");
+   const progressContainer = document.getElementById("progressContainer");
+
+   submitBtn.disabled = false;
+   submitBtn.innerHTML = '<i class="fas fa-upload"></i> Enviar Arquivo';
+   progressContainer.classList.add("hidden");
+
+   updateProgress(0);
+}
+
+function removeFile() {
+   resetFileInput();
+   hideFilePreview();
+
+   // Restaurar campo de duração
+   const durationGroup = document.getElementById("durationGroup");
+   const durationInput = document.getElementById("duracao");
+
+   durationGroup.style.display = "flex";
+   durationInput.disabled = false;
+   durationInput.setAttribute("required", "required");
+   durationInput.value = 5;
+}
+
+function resetFileInput() {
+   const fileInput = document.getElementById("arquivo");
+   fileInput.value = "";
+}
+
+function resetForm() {
+   document.getElementById("uploadForm").reset();
+   hideFilePreview();
+   resetFileInput();
+
+   // Restaurar campo de duração
+   const durationGroup = document.getElementById("durationGroup");
+   const durationInput = document.getElementById("duracao");
+
+   durationGroup.style.display = "flex";
+   durationInput.disabled = false;
+   durationInput.setAttribute("required", "required");
+   durationInput.value = 5;
+}
+
+function showAlert(message, type = "info") {
+   // Remover alertas existentes
+   const existingAlerts = document.querySelectorAll(".alert-dynamic");
+   existingAlerts.forEach((alert) => alert.remove());
+
+   const alert = document.createElement("div");
+   alert.className = `alert alert-${type} alert-dynamic`;
+
+   const icon =
+      type === "success"
+         ? "check-circle"
+         : type === "error"
+         ? "exclamation-circle"
+         : "info-circle";
+
+   alert.innerHTML = `
+        <i class="fas fa-${icon}"></i> ${message}
+        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
     `;
 
-   notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 6px;
-        color: white;
-        font-weight: 500;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease-out;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        max-width: 300px;
-    `;
+   const content = document.querySelector(".content");
+   content.insertBefore(alert, content.firstChild);
 
-   const colors = {
-      success: "#27ae60",
-      error: "#e74c3c",
-      info: "#3498db",
-      warning: "#f39c12",
-   };
-
-   notification.style.background = colors[type] || colors.info;
-
-   document.body.appendChild(notification);
-
+   // Auto-remover após 5 segundos
    setTimeout(() => {
-      notification.style.animation = "slideOutRight 0.3s ease-out";
-      setTimeout(() => {
-         if (notification.parentNode) {
-            notification.remove();
-         }
-      }, 300);
-   }, 4000);
+      if (alert.parentNode) {
+         alert.remove();
+      }
+   }, 5000);
 }
 
-function validateUploadForm() {
-   const form = document.querySelector(".upload-form");
+function formatFileSize(bytes) {
+   if (bytes === 0) return "0 Bytes";
 
-   if (form) {
-      form.addEventListener("submit", function (e) {
-         const fileInput = document.getElementById("arquivo");
-         const file = fileInput.files[0];
+   const k = 1024;
+   const sizes = ["Bytes", "KB", "MB", "GB"];
+   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-         if (!file) {
-            e.preventDefault();
-            showNotification("Por favor, selecione um arquivo", "error");
-            return false;
-         }
+   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
 
-         const maxSize = 50 * 1024 * 1024;
-         if (file.size > maxSize) {
-            e.preventDefault();
-            showNotification(
-               "Arquivo muito grande! Máximo 50MB permitido",
-               "error"
-            );
-            return false;
-         }
-
-         const allowedTypes = [
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/gif",
-            "video/mp4",
-            "video/avi",
-            "video/mov",
-            "video/wmv",
-         ];
-
-         if (!allowedTypes.includes(file.type)) {
-            e.preventDefault();
-            showNotification("Tipo de arquivo não permitido!", "error");
-            return false;
-         }
-
-         const submitButton = form.querySelector('button[type="submit"]');
-         submitButton.classList.add("loading");
-         submitButton.disabled = true;
-      });
+function getFileTypeLabel(mimeType) {
+   if (mimeType.startsWith("image/")) {
+      return "Imagem";
+   } else if (mimeType.startsWith("video/")) {
+      return "Vídeo";
    }
+
+   return "Arquivo";
 }
 
+// CSS adicional para alertas dinâmicos
 const additionalCSS = `
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.alert-dynamic {
+    position: relative;
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideOutRight {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+.alert-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    font-size: 1.2rem;
 }
 
-@keyframes fadeOut {
+.alert-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideDown {
     from {
-        opacity: 1;
+        opacity: 0;
+        transform: translateY(-20px);
     }
     to {
-        opacity: 0;
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 `;

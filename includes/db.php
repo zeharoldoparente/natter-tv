@@ -8,6 +8,106 @@ define('TEMP_PATH', __DIR__ . '/../temp/');
 define('MAX_FILE_SIZE', 50 * 1024 * 1024);
 define('SIDEBAR_PATH', __DIR__ . '/../uploads/sidebar/');
 define('SIDEBAR_WEB_PATH', '../uploads/sidebar/');
+
+// Verificar se as constantes ainda não foram definidas
+if (!defined('SIDEBAR_PATH')) {
+   // Caminho físico para pasta de sidebar
+   define('SIDEBAR_PATH', dirname(__DIR__) . '/sidebar/');
+}
+
+if (!defined('SIDEBAR_WEB_PATH')) {
+   // Caminho web para sidebar (relativo ao navegador)
+   define('SIDEBAR_WEB_PATH', '../sidebar/');
+}
+
+if (!defined('MAX_FILE_SIZE')) {
+   // Tamanho máximo para upload (50MB)
+   define('MAX_FILE_SIZE', 52428800);
+}
+
+if (!defined('UPLOAD_PATH')) {
+   // Caminho para uploads principais
+   define('UPLOAD_PATH', dirname(__DIR__) . '/uploads/');
+}
+
+if (!defined('TEMP_PATH')) {
+   // Caminho para arquivos temporários
+   define('TEMP_PATH', dirname(__DIR__) . '/temp/');
+}
+
+/**
+ * Função auxiliar para determinar tipo de arquivo
+ * Adicionar ao functions.php se não existir
+ */
+if (!function_exists('getFileType')) {
+   function getFileType($filename)
+   {
+      $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+      $imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+      $videoTypes = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
+
+      if (in_array($ext, $imageTypes)) {
+         return 'imagem';
+      } elseif (in_array($ext, $videoTypes)) {
+         return 'video';
+      }
+
+      return 'desconhecido';
+   }
+}
+
+/**
+ * Função auxiliar para formatar tamanho de arquivo
+ * Adicionar ao functions.php se não existir
+ */
+if (!function_exists('formatFileSize')) {
+   function formatFileSize($bytes)
+   {
+      if ($bytes === 0) return '0 Bytes';
+
+      $k = 1024;
+      $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      $i = floor(log($bytes) / log($k));
+
+      return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
+   }
+}
+
+/**
+ * Criar pasta de sidebar se não existir
+ */
+if (!is_dir(SIDEBAR_PATH)) {
+   if (!mkdir(SIDEBAR_PATH, 0755, true)) {
+      error_log("Erro: Não foi possível criar a pasta sidebar em " . SIDEBAR_PATH);
+   }
+}
+
+/**
+ * Criar arquivo .htaccess para proteção da pasta sidebar
+ */
+$htaccess_content = "# Proteção para pasta sidebar
+<Files *.php>
+    Deny from all
+</Files>
+
+# Permitir apenas imagens e vídeos
+<FilesMatch \"\.(jpg|jpeg|png|gif|bmp|webp|mp4|avi|mov|wmv|flv|webm|mkv)$\">
+    Allow from all
+</FilesMatch>
+
+# Cache para arquivos de mídia
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/* \"access plus 1 month\"
+    ExpiresByType video/* \"access plus 1 month\"
+</IfModule>";
+
+$htaccess_file = SIDEBAR_PATH . '.htaccess';
+if (!file_exists($htaccess_file)) {
+   file_put_contents($htaccess_file, $htaccess_content);
+}
+
 if (!is_dir(SIDEBAR_PATH)) {
    mkdir(SIDEBAR_PATH, 0755, true);
 }
