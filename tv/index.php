@@ -543,6 +543,179 @@ if (empty($conteudos)) {
             console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
+
+      function initializeSidebarVideo() {
+         const sidebarVideos = document.querySelectorAll('#sidebar-direita video');
+
+         sidebarVideos.forEach((video, index) => {
+            console.log(`Inicializando vídeo da sidebar ${index + 1}`);
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('webkit-playsinline', 'true');
+            video.setAttribute('x-webkit-airplay', 'deny');
+            video.setAttribute('disablePictureInPicture', 'true');
+            video.muted = true;
+            video.loop = true;
+            video.autoplay = true;
+            video.addEventListener('loadedmetadata', function() {
+               console.log('Sidebar video metadata loaded');
+               this.currentTime = 0;
+               this.play().catch(e => {
+                  console.error('Erro ao reproduzir vídeo da sidebar:', e);
+                  replaceVideoWithImage(this);
+               });
+            });
+
+            video.addEventListener('canplay', function() {
+               console.log('Sidebar video can play');
+               this.play().catch(e => {
+                  console.error('Erro ao reproduzir vídeo da sidebar (canplay):', e);
+                  replaceVideoWithImage(this);
+               });
+            });
+
+            video.addEventListener('ended', function() {
+               console.log('Sidebar video ended, restarting...');
+               this.currentTime = 0;
+               this.play().catch(e => {
+                  console.error('Erro ao reiniciar vídeo da sidebar:', e);
+               });
+            });
+
+            video.addEventListener('error', function(e) {
+               console.error('Erro no vídeo da sidebar:', e, this.error);
+               replaceVideoWithImage(this);
+            });
+
+            video.addEventListener('stalled', function() {
+               console.warn('Vídeo da sidebar travado, tentando reiniciar...');
+               this.load();
+               setTimeout(() => {
+                  this.play().catch(e => {
+                     console.error('Erro ao reiniciar vídeo travado:', e);
+                     replaceVideoWithImage(this);
+                  });
+               }, 1000);
+            });
+            setTimeout(() => {
+               if (video.paused || video.currentTime === 0) {
+                  console.warn('Vídeo da sidebar não está reproduzindo, forçando...');
+                  video.load();
+                  video.play().catch(e => {
+                     console.error('Falha final ao reproduzir vídeo da sidebar:', e);
+                     replaceVideoWithImage(video);
+                  });
+               }
+            }, 3000);
+            let lastTime = video.currentTime;
+            setInterval(() => {
+               if (!video.paused && video.currentTime === lastTime && video.readyState > 0) {
+                  console.warn('Vídeo da sidebar pode estar travado');
+                  video.currentTime = video.currentTime + 0.1;
+               }
+               lastTime = video.currentTime;
+            }, 5000);
+         });
+      }
+
+      function replaceVideoWithImage(videoElement) {
+         console.log('Substituindo vídeo por imagem de fallback');
+         const img = document.createElement('img');
+         img.src = '../assets/images/propaganda.png';
+         img.alt = 'Propaganda';
+         img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+
+         if (videoElement.parentNode) {
+            videoElement.parentNode.replaceChild(img, videoElement);
+         }
+      }
+
+      function detectDevice() {
+         const userAgent = navigator.userAgent.toLowerCase();
+
+         if (userAgent.includes('tizen')) {
+            console.log('Samsung Smart TV detectada');
+            return 'samsung';
+         } else if (userAgent.includes('webos')) {
+            console.log('LG Smart TV detectada');
+            return 'lg';
+         } else if (userAgent.includes('android tv')) {
+            console.log('Android TV detectada');
+            return 'android';
+         } else if (userAgent.includes('hbbtv')) {
+            console.log('HbbTV detectada');
+            return 'hbbtv';
+         }
+
+         return 'desktop';
+      }
+
+      function applyDeviceSpecificSettings() {
+         const device = detectDevice();
+
+         switch (device) {
+            case 'samsung':
+               document.querySelectorAll('#sidebar-direita video').forEach(video => {
+                  video.setAttribute('webkit-playsinline', 'true');
+                  video.preload = 'auto';
+               });
+               break;
+
+            case 'lg':
+               document.querySelectorAll('#sidebar-direita video').forEach(video => {
+                  video.setAttribute('playsinline', 'true');
+                  video.muted = true;
+               });
+               break;
+
+            case 'android':
+               document.querySelectorAll('#sidebar-direita video').forEach(video => {
+                  video.controls = false;
+                  video.setAttribute('playsinline', 'true');
+               });
+               break;
+         }
+      }
+      const sidebarObserver = new MutationObserver(function(mutations) {
+         mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+               if (node.nodeType === Node.ELEMENT_NODE) {
+                  const videos = node.querySelectorAll ? node.querySelectorAll('video') : [];
+                  if (videos.length > 0 || node.tagName === 'VIDEO') {
+                     console.log('Novo vídeo detectado na sidebar');
+                     setTimeout(initializeSidebarVideo, 500);
+                  }
+               }
+            });
+         });
+      });
+      document.addEventListener('DOMContentLoaded', function() {
+         console.log('Inicializando sistema de vídeo da sidebar...');
+
+         applyDeviceSpecificSettings();
+         const sidebar = document.getElementById('sidebar-direita');
+         if (sidebar) {
+            sidebarObserver.observe(sidebar, {
+               childList: true,
+               subtree: true
+            });
+         }
+
+         setTimeout(initializeSidebarVideo, 1000);
+
+         setInterval(() => {
+            const videos = document.querySelectorAll('#sidebar-direita video');
+            if (videos.length > 0) {
+               videos.forEach(video => {
+                  if (video.paused && video.readyState >= 3) {
+                     console.log('Re-iniciando vídeo pausado da sidebar');
+                     video.play().catch(e => {
+                        console.error('Erro ao re-iniciar vídeo:', e);
+                     });
+                  }
+               });
+            }
+         }, 10000);
+      });
    </script>
 </body>
 

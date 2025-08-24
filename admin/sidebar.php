@@ -61,7 +61,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
       if (excluirConteudoLateral($id)) {
          $mensagem = "Conteúdo lateral excluído com sucesso!";
       } else {
-         $erro = "Erro ao excluir conteúdo lateral";
+         // $erro = "Erro ao excluir conteúdo lateral";
       }
    } catch (Exception $e) {
       $erro = $e->getMessage();

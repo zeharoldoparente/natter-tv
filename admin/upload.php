@@ -110,6 +110,54 @@ try {
          <?php if (!empty($stats)): ?>
             <div class="card">
                <div class="card-header">
+                  <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
+               </div>
+               <div class="card-body">
+                  <div class="instructions">
+                     <div class="instruction-item">
+                        <i class="fas fa-tv text-success"></i>
+                        <div>
+                           <h5>Códigos de Canal</h5>
+                           <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
+                        </div>
+                     </div>
+
+                     <div class="instruction-item">
+                        <i class="fas fa-image text-info"></i>
+                        <div>
+                           <h5>Imagens</h5>
+                           <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
+                        </div>
+                     </div>
+
+                     <div class="instruction-item">
+                        <i class="fas fa-video text-warning"></i>
+                        <div>
+                           <h5>Vídeos</h5>
+                           <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
+                        </div>
+                     </div>
+
+                     <div class="instruction-item">
+                        <i class="fas fa-desktop text-primary"></i>
+                        <div>
+                           <h5>Visualização na TV</h5>
+                           <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
+                        </div>
+                     </div>
+
+                     <div class="instruction-item">
+                        <i class="fas fa-th-large text-warning"></i>
+                        <div>
+                           <h5>Conteúdo Lateral</h5>
+                           <p>Para gerenciar propagandas e conteúdo da sidebar, use a página <a href="sidebar.php">Conteúdo Lateral</a></p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="card">
+               <div class="card-header">
                   <h3><i class="fas fa-chart-bar"></i> Estatísticas por Canal</h3>
                </div>
                <div class="card-body">
@@ -131,7 +179,6 @@ try {
                </div>
             </div>
          <?php endif; ?>
-
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo</h3>
@@ -202,55 +249,6 @@ try {
                      <div class="progress-text" id="progressText">0%</div>
                   </div>
                </form>
-            </div>
-         </div>
-
-         <div class="card">
-            <div class="card-header">
-               <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
-            </div>
-            <div class="card-body">
-               <div class="instructions">
-                  <div class="instruction-item">
-                     <i class="fas fa-tv text-success"></i>
-                     <div>
-                        <h5>Códigos de Canal</h5>
-                        <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
-                     </div>
-                  </div>
-
-                  <div class="instruction-item">
-                     <i class="fas fa-image text-info"></i>
-                     <div>
-                        <h5>Imagens</h5>
-                        <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
-                     </div>
-                  </div>
-
-                  <div class="instruction-item">
-                     <i class="fas fa-video text-warning"></i>
-                     <div>
-                        <h5>Vídeos</h5>
-                        <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
-                     </div>
-                  </div>
-
-                  <div class="instruction-item">
-                     <i class="fas fa-desktop text-primary"></i>
-                     <div>
-                        <h5>Visualização na TV</h5>
-                        <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
-                     </div>
-                  </div>
-
-                  <div class="instruction-item">
-                     <i class="fas fa-th-large text-warning"></i>
-                     <div>
-                        <h5>Conteúdo Lateral</h5>
-                        <p>Para gerenciar propagandas e conteúdo da sidebar, use a página <a href="sidebar.php">Conteúdo Lateral</a></p>
-                     </div>
-                  </div>
-               </div>
             </div>
          </div>
       </div>

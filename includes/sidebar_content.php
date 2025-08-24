@@ -12,6 +12,7 @@ if (!$sidebarEnabled) {
    echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
    return;
 }
+
 $conteudoAtivo = null;
 $usingDatabase = false;
 
@@ -37,7 +38,25 @@ if ($usingDatabase && $conteudoAtivo) {
       $alt = htmlspecialchars($conteudoAtivo['descricao'] ?: $conteudoAtivo['nome_original']);
 
       if ($tipo === 'video') {
-         echo '<video src="' . $src . '" autoplay muted loop playsinline webkit-playsinline preload="auto" title="' . $alt . '"></video>';
+         echo '<video 
+                  src="' . $src . '" 
+                  autoplay 
+                  muted 
+                  loop 
+                  playsinline 
+                  webkit-playsinline 
+                  preload="auto"
+                  controls="false"
+                  disablePictureInPicture
+                  controlslist="nodownload nofullscreen noremoteplayback"
+                  style="width: 100%; height: 100%; object-fit: cover; background: #000;"
+                  title="' . $alt . '"
+                  onloadstart="console.log(\'Video loading started\')"
+                  oncanplay="console.log(\'Video can start playing\')"
+                  onerror="console.error(\'Video error:\', this.error); this.style.display=\'none\'; this.parentNode.innerHTML=\'<img src=&quot;../assets/images/propaganda.png&quot; alt=&quot;Propaganda&quot; style=&quot;width:100%;height:100%;object-fit:cover;&quot;>\';"
+                  onended="this.currentTime = 0; this.play();">
+                  Seu navegador não suporta vídeos HTML5.
+               </video>';
       } else {
          $ext = strtolower(pathinfo($conteudoAtivo['arquivo'], PATHINFO_EXTENSION));
 
@@ -50,12 +69,12 @@ if ($usingDatabase && $conteudoAtivo) {
                   imagedestroy($img);
                }
                $jpegSrc = SIDEBAR_WEB_PATH . basename($jpegPath);
-               echo '<img src="' . $jpegSrc . '" alt="' . $alt . '">';
+               echo '<img src="' . $jpegSrc . '" alt="' . $alt . '" style="width: 100%; height: 100%; object-fit: cover;">';
             } else {
-               echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
+               echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
             }
          } else {
-            echo '<img src="' . $src . '" alt="' . $alt . '">';
+            echo '<img src="' . $src . '" alt="' . $alt . '" style="width: 100%; height: 100%; object-fit: cover;">';
          }
       }
    } else {
@@ -91,7 +110,24 @@ if (!$usingDatabase) {
       }
 
       if (in_array($ext, ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'])) {
-         echo '<video src="' . $src . '" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>';
+         echo '<video 
+                  src="' . $src . '" 
+                  autoplay 
+                  muted 
+                  loop 
+                  playsinline 
+                  webkit-playsinline 
+                  preload="auto"
+                  controls="false"
+                  disablePictureInPicture
+                  controlslist="nodownload nofullscreen noremoteplayback"
+                  style="width: 100%; height: 100%; object-fit: cover; background: #000;"
+                  onloadstart="console.log(\'Sidebar video loading started\')"
+                  oncanplay="console.log(\'Sidebar video can start playing\')"
+                  onerror="console.error(\'Sidebar video error:\', this.error); this.style.display=\'none\'; this.parentNode.innerHTML=\'<img src=&quot;../assets/images/propaganda.png&quot; alt=&quot;Propaganda&quot; style=&quot;width:100%;height:100%;object-fit:cover;&quot;>\';"
+                  onended="this.currentTime = 0; this.play();">
+                  Seu navegador não suporta vídeos HTML5.
+               </video>';
       } else {
          if ($ext === 'webp' && (!isset($_SERVER['HTTP_ACCEPT']) || strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') === false)) {
             $originalPath = $sidebarPath . $file;
@@ -103,15 +139,15 @@ if (!$usingDatabase) {
                   imagedestroy($img);
                }
                $jpegSrc = (defined('SIDEBAR_WEB_PATH') ? SIDEBAR_WEB_PATH : "../sidebar/") . basename($jpegPath);
-               echo '<img src="' . $jpegSrc . '" alt="Propaganda">';
+               echo '<img src="' . $jpegSrc . '" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
             } else {
-               echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
+               echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
             }
          } else {
-            echo '<img src="' . $src . '" alt="Propaganda">';
+            echo '<img src="' . $src . '" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
          }
       }
    } else {
-      echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
+      echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
    }
 }
