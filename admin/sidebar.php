@@ -84,6 +84,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Gerenciar Conteúdo Lateral - NatterTV</title>
+   <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
@@ -155,8 +156,8 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                            <p><strong>Descrição:</strong> <?php echo htmlspecialchars($conteudoAtivo['descricao']); ?></p>
                         <?php endif; ?>
 
-                        <div class="actions" style="margin-top: 15px;">
-                           <form method="POST" style="display: inline-block;">
+                        <div class="actions mt-15">
+                           <form method="POST" class="inline-block">
                               <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
                               <button type="submit" name="desativar_todos" class="btn btn-warning btn-sm"
                                  onclick="return confirm('Desativar conteúdo lateral atual?')">
@@ -171,7 +172,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                   </div>
                <?php else: ?>
                   <div class="no-content">
-                     <i class="fas fa-eye-slash" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                     <i class="fas fa-eye-slash"></i>
                      <h4>Nenhum conteúdo lateral ativo</h4>
                      <p>Envie um novo conteúdo ou ative um existente para aparecer na sidebar da TV.</p>
                   </div>
@@ -293,7 +294,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                                  </td>
                                  <td class="actions">
                                     <?php if (!$conteudo['ativo']): ?>
-                                       <form method="POST" style="display: inline-block;">
+                                       <form method="POST" class="inline-block">
                                           <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
                                           <input type="hidden" name="conteudo_id" value="<?php echo $conteudo['id']; ?>">
                                           <button type="submit" name="ativar_conteudo" class="btn btn-success btn-sm" title="Ativar este conteúdo">
@@ -413,11 +414,10 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          preview.className = 'file-preview';
          preview.innerHTML = `
                 <div class="preview-content">
-                    <div class="preview-media">
-                        ${file.type.startsWith('video/') ? 
-                            `<video src="${URL.createObjectURL(file)}" controls style="max-width: 100px; max-height: 80px;"></video>` :
-                            `<img src="${URL.createObjectURL(file)}" style="max-width: 100px; max-height: 80px; object-fit: cover;">`
-                        }
+                    ${file.type.startsWith('video/') ?
+                            `<video src="${URL.createObjectURL(file)}" controls></video>` :
+                            `<img src="${URL.createObjectURL(file)}">`
+                     }
                     </div>
                     <div class="preview-info">
                         <h5>${file.name}</h5>

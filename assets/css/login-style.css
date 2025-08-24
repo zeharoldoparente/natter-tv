@@ -1,29 +1,9 @@
-* {
-   margin: 0;
-   padding: 0;
-   box-sizing: border-box;
-}
-
-:root {
-   --primary-color: #f07d00;
-   --green-color: #166353;
-   --secondary-color: #3498db;
-   --success-color: #27ae60;
-   --warning-color: #f39c12;
-   --danger-color: #e74c3c;
-   --light-color: #ecf0f1;
-   --dark-color: #2c3e50;
-}
-
 body {
-   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
    background: var(--green-color);
    min-height: 100vh;
    display: flex;
    align-items: center;
    justify-content: center;
-   color: #333;
-   line-height: 1.6;
 }
 
 body::before {

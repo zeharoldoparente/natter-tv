@@ -1,22 +1,9 @@
-/* =================== TV CORPORATIVA - CSS CORRIGIDO (CONSERVADOR) =================== */
-
-* {
-   margin: 0;
-   padding: 0;
-   box-sizing: border-box;
-}
-
 body {
-   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
    background-color: #000;
-   color: #333;
-   line-height: 1.6;
    height: 100vh;
    overflow: hidden;
    cursor: none;
 }
-
-/* =================== LAYOUT PRINCIPAL =================== */
 
 #conteudo-principal {
    position: relative;
@@ -32,8 +19,8 @@ body {
    position: absolute;
    top: 0;
    left: 0;
-   width: calc(100% - 300px); /* FIXO: sempre deixa 300px para sidebar */
-   height: calc(100% - 60px); /* FIXO: sempre deixa 60px para rodapé */
+   width: calc(100% - 300px);
+   height: calc(100% - 60px);
    display: flex;
    align-items: center;
    justify-content: center;
@@ -48,11 +35,9 @@ body {
    transition: opacity 0.5s ease-in-out;
 }
 
-/* =================== SISTEMA RSS =================== */
-
 .rss-container {
    position: absolute;
-   height: 60px; /* ALTURA FIXA */
+   height: 60px;
    overflow: hidden;
    z-index: 15;
    color: #ffffff;
@@ -63,13 +48,13 @@ body {
 .rss-container.rodape {
    bottom: 0;
    left: 0;
-   width: calc(100% - 300px); /* FIXO: não sobrepõe a sidebar */
+   width: calc(100% - 300px);
 }
 
 .rss-container.topo {
    top: 0;
    left: 0;
-   width: calc(100% - 300px); /* FIXO: não sobrepõe a sidebar */
+   width: calc(100% - 300px);
 }
 
 #rss-rodape {
@@ -81,7 +66,7 @@ body {
    position: absolute;
    bottom: 0;
    left: 0;
-   width: calc(100% - 300px); /* FIXO: sempre deixa espaço para sidebar */
+   width: calc(100% - 300px);
    height: 60px;
    display: flex;
    align-items: center;
@@ -149,13 +134,11 @@ body {
    transform: translateX(0) !important;
 }
 
-/* =================== SIDEBAR DIREITA - POSIÇÃO FIXA =================== */
-
 #sidebar-direita {
    position: absolute;
    top: 0;
    right: 0;
-   width: 300px; /* LARGURA FIXA - esta é a chave! */
+   width: 300px;
    height: 100vh;
    z-index: 10;
    display: flex;
@@ -166,7 +149,7 @@ body {
 .propaganda {
    width: 100%;
    flex: 1 1 auto;
-   min-height: 0; /* Permite que o flex funcione corretamente */
+   min-height: 0;
 }
 
 .propaganda img,
@@ -181,7 +164,7 @@ body {
    background: #fff;
    text-align: center;
    flex-shrink: 0;
-   height: 180px; /* ALTURA FIXA */
+   height: 180px;
    display: flex;
    flex-direction: column;
    padding: 15px 20px;
@@ -212,7 +195,7 @@ body {
 }
 
 .logo-tv img {
-   width: 160px; /* TAMANHO FIXO */
+   width: 160px;
    margin-bottom: 5px;
    height: auto;
    max-width: 100%;
@@ -220,7 +203,7 @@ body {
 }
 
 .canal-nome {
-   font-size: 18px; /* TAMANHO FIXO */
+   font-size: 18px;
    font-weight: 600;
    color: #333;
    background: linear-gradient(45deg, #f39c12, #e67e22);
@@ -237,7 +220,7 @@ body {
 }
 
 #horario {
-   font-size: 28px; /* TAMANHO FIXO */
+   font-size: 28px;
    font-weight: 300;
    color: #333;
    font-family: "Courier New", monospace;
@@ -246,19 +229,17 @@ body {
 }
 
 #data {
-   font-size: 14px; /* TAMANHO FIXO */
+   font-size: 14px;
    color: #666;
    text-transform: capitalize;
    line-height: 1.2;
 }
 
-/* =================== OUTROS ELEMENTOS =================== */
-
 #overlay-info {
    position: absolute;
    top: 10px;
    left: 10px;
-   width: calc(90% - 300px); /* Não sobrepõe a sidebar */
+   width: calc(90% - 300px);
    display: flex;
    justify-content: space-between;
    align-items: center;
@@ -297,8 +278,6 @@ body {
    font-size: 1.2rem;
    opacity: 0.8;
 }
-
-/* =================== SELETOR DE CANAL =================== */
 
 .channel-selector {
    position: fixed;
@@ -497,8 +476,6 @@ body {
    animation-delay: 10s;
 }
 
-/* =================== TELA SEM CONTEÚDO =================== */
-
 #tela-sem-conteudo {
    position: fixed;
    top: 0;
@@ -569,8 +546,6 @@ body {
    font-size: 0.9rem;
 }
 
-/* =================== UTILITÁRIOS =================== */
-
 .hidden {
    display: none !important;
 }
@@ -583,7 +558,7 @@ body {
 .connection-indicator {
    position: absolute;
    bottom: 20px;
-   right: 320px; /* Ajustado para não sobrepor a sidebar */
+   right: 320px;
    width: 12px;
    height: 12px;
    border-radius: 50%;
@@ -597,8 +572,6 @@ body {
    background: #e74c3c;
    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
 }
-
-/* =================== ANIMAÇÕES =================== */
 
 @keyframes fadeIn {
    from {
@@ -694,13 +667,9 @@ body {
       transform: translateX(-50%);
    }
 }
-
-/* =================== RESPONSIVIDADE PARA DIFERENTES TVs =================== */
-
-/* Para TVs muito grandes (acima de 2560px) */
 @media screen and (min-width: 2560px) {
    #sidebar-direita {
-      width: 400px; /* Sidebar maior para TVs grandes */
+      width: 400px;
    }
 
    #media-container {
@@ -717,10 +686,9 @@ body {
    }
 }
 
-/* Para TVs pequenas (1366px e menores) */
 @media screen and (max-width: 1366px) {
    #sidebar-direita {
-      width: 250px; /* Sidebar menor para TVs pequenas */
+      width: 250px;
    }
 
    #media-container {
@@ -737,11 +705,11 @@ body {
    }
 
    .logo-tv img {
-      width: 140px; /* Logo menor */
+      width: 140px;
    }
 
    #horario {
-      font-size: 24px; /* Texto menor */
+      font-size: 24px;
    }
 
    .canal-nome {
@@ -749,10 +717,9 @@ body {
    }
 }
 
-/* Para resoluções muito baixas (1024px e menores) */
 @media screen and (max-width: 1024px) {
    #sidebar-direita {
-      width: 200px; /* Sidebar ainda menor */
+      width: 200px;
    }
 
    #media-container {
@@ -769,7 +736,7 @@ body {
    }
 
    .info-branca {
-      height: 150px; /* Info menor */
+      height: 150px;
    }
 
    .logo-tv img {
@@ -785,8 +752,6 @@ body {
    }
 }
 
-/* =================== FULLSCREEN =================== */
-
 :-webkit-full-screen #conteudo-principal {
    background: #000;
 }
@@ -798,8 +763,6 @@ body {
 :fullscreen #conteudo-principal {
    background: #000;
 }
-
-/* =================== CONTROLES DE VÍDEO =================== */
 
 video {
    background: #000;

@@ -1,0 +1,31 @@
+:root {
+   --primary-color: #f07d00;
+   --green-color: #166353;
+   --secondary-color: #3498db;
+   --success-color: #27ae60;
+   --warning-color: #f39c12;
+   --danger-color: #e74c3c;
+   --info-color: #3498db;
+   --light-color: #ecf0f1;
+   --dark-color: #2c3e50;
+}
+
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+}
+
+body {
+   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+   color: #333;
+   line-height: 1.6;
+}
+
+.inline-block {
+   display: inline-block;
+}
+
+.mt-15 {
+   margin-top: 15px;
+}

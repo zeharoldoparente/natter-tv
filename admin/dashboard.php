@@ -58,6 +58,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Painel Administrativo - NatterTV</title>
+   <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
@@ -99,7 +100,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                <h3><i class="fas fa-broadcast-tower"></i> Controle da TV</h3>
             </div>
             <div class="card-body">
-               <form method="POST" style="display: inline-block;">
+               <form method="POST" class="inline-block">
                   <button type="submit" name="atualizar_tv" class="btn btn-primary">
                      <i class="fas fa-sync"></i> Atualizar TV Agora
                   </button>
