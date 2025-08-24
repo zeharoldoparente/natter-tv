@@ -107,8 +107,6 @@ try {
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
-
-         <!-- Estatísticas por Canal -->
          <?php if (!empty($stats)): ?>
             <div class="card">
                <div class="card-header">
@@ -141,8 +139,6 @@ try {
             <div class="card-body">
                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
-
-                  <!-- Campo para código do canal -->
                   <div class="form-group">
                      <label for="codigo_canal">
                         <i class="fas fa-tv"></i>
@@ -262,9 +258,90 @@ try {
 
    <script src="../assets/js/upload.js"></script>
    <script>
-      document.getElementById('codigo_canal').addEventListener('input', function(e) {
-         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      document.addEventListener('DOMContentLoaded', function() {
+         const canalInput = document.getElementById('codigo_canal');
+         if (canalInput) {
+            canalInput.addEventListener('input', function(e) {
+               this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+         }
+         const fileInput = document.getElementById('arquivo');
+         if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+               console.log('Arquivo selecionado no upload principal:', e.target.files[0]);
+            });
+         }
       });
+
+      function showAlert(message, type = 'info') {
+         console.log('Mostrando alert:', message, type);
+         const existingAlerts = document.querySelectorAll('.alert-dynamic');
+         existingAlerts.forEach((alert) => alert.remove());
+
+         const alert = document.createElement('div');
+         alert.className = `alert alert-${type} alert-dynamic`;
+         alert.style.cssText = `
+         position: relative;
+         margin-bottom: 20px;
+         animation: slideDown 0.3s ease-out;
+         padding: 15px;
+         border-radius: 6px;
+         display: flex;
+         align-items: center;
+      `;
+
+         const icon = type === 'success' ? 'check-circle' :
+            type === 'error' ? 'exclamation-circle' : 'info-circle';
+
+         const colors = {
+            'success': {
+               bg: '#d4edda',
+               color: '#155724',
+               border: '#c3e6cb'
+            },
+            'error': {
+               bg: '#f8d7da',
+               color: '#721c24',
+               border: '#f5c6cb'
+            },
+            'info': {
+               bg: '#d1ecf1',
+               color: '#0c5460',
+               border: '#bee5eb'
+            }
+         };
+
+         const colorSet = colors[type] || colors.info;
+         alert.style.backgroundColor = colorSet.bg;
+         alert.style.color = colorSet.color;
+         alert.style.border = `1px solid ${colorSet.border}`;
+
+         alert.innerHTML = `
+         <i class="fas fa-${icon}" style="margin-right: 10px; font-size: 1.2rem;"></i> 
+         ${message}
+         <button type="button" class="alert-close" onclick="this.parentElement.remove()" 
+                 style="position: absolute; top: 15px; right: 15px; background: none; border: none; 
+                        color: inherit; opacity: 0.7; cursor: pointer; font-size: 1.2rem;">
+            <i class="fas fa-times"></i>
+         </button>
+      `;
+
+         const content = document.querySelector('.content');
+         if (content) {
+            content.insertBefore(alert, content.firstChild);
+            alert.scrollIntoView({
+               behavior: 'smooth',
+               block: 'nearest'
+            });
+         }
+         setTimeout(() => {
+            if (alert.parentNode) {
+               alert.style.opacity = '0';
+               alert.style.transform = 'translateY(-20px)';
+               setTimeout(() => alert.remove(), 300);
+            }
+         }, 5000);
+      }
    </script>
 </body>
 

@@ -7,7 +7,6 @@ if (!isset($_SESSION['logado'])) {
 include "../includes/db.php";
 include "../includes/functions.php";
 
-// Gerenciar conteúdo lateral
 $sidebar_file = null;
 if (isset($_GET['delete_sidebar'])) {
    foreach (glob(SIDEBAR_PATH . '*') as $f) {
@@ -113,15 +112,12 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                </a>
             </div>
          </div>
-
-         <!-- Estatísticas do Sistema -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-chart-pie"></i> Estatísticas do Sistema</h3>
             </div>
             <div class="card-body">
                <?php
-               // Estatísticas de conteúdo
                $stats_conteudo = $conn->query("
                   SELECT 
                      COUNT(*) as total_arquivos,
@@ -131,8 +127,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                   FROM conteudos 
                   WHERE ativo = 1
                ")->fetch_assoc();
-
-               // Estatísticas de RSS
                $stats_rss = $conn->query("
                   SELECT 
                      COUNT(*) as total_feeds,
@@ -211,8 +205,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                   GROUP BY codigo_canal
                   ORDER BY codigo_canal
                ");
-
-               // Buscar feeds RSS por canal
                $rss_por_canal = [];
                $rss_query = $conn->query("
                   SELECT codigo_canal, COUNT(*) as total_feeds
@@ -270,7 +262,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                <?php endif; ?>
             </div>
             <div class="card-body">
-               <!-- Filtro por canal -->
                <div class="filter-section">
                   <form method="GET" class="filter-form">
                      <div class="filter-group">

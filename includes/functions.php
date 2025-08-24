@@ -328,18 +328,12 @@ function processarUploadLateral($arquivo, $descricao = '')
    if ($tipo === 'desconhecido') {
       throw new Exception('Tipo de arquivo não permitido');
    }
-
-   // Criar nome único para o arquivo
    $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
    $nomeArquivo = 'sidebar_' . time() . '_' . uniqid() . '.' . $extensao;
    $caminhoCompleto = SIDEBAR_PATH . $nomeArquivo;
-
-   // Mover arquivo para pasta de sidebar
    if (!move_uploaded_file($arquivo['tmp_name'], $caminhoCompleto)) {
       throw new Exception('Erro ao salvar arquivo');
    }
-
-   // Obter dimensões se for imagem
    $dimensoes = '';
    if ($tipo === 'imagem') {
       $info = getimagesize($caminhoCompleto);
@@ -349,8 +343,6 @@ function processarUploadLateral($arquivo, $descricao = '')
    }
 
    $usuarioId = $_SESSION['usuario_id'] ?? null;
-
-   // Inserir no banco de dados
    $stmt = $conn->prepare("
         INSERT INTO conteudos_laterais 
         (arquivo, nome_original, tipo, tamanho, dimensoes, usuario_upload, descricao) 
@@ -380,15 +372,9 @@ function processarUploadLateral($arquivo, $descricao = '')
 
    return $conteudoId;
 }
-
-/**
- * Ativa um conteúdo lateral específico
- */
 function ativarConteudoLateral($id)
 {
    global $conn;
-
-   // Verificar se o conteúdo existe
    $stmt = $conn->prepare("SELECT arquivo, nome_original FROM conteudos_laterais WHERE id = ?");
    $stmt->bind_param("i", $id);
    $stmt->execute();
@@ -400,23 +386,16 @@ function ativarConteudoLateral($id)
 
    $stmt->close();
 
-   // Verificar se o arquivo ainda existe
    $caminhoArquivo = SIDEBAR_PATH . $row['arquivo'];
    if (!file_exists($caminhoArquivo)) {
       throw new Exception('Arquivo não encontrado no servidor');
    }
-
-   // Desativar conteúdo lateral atual
    $conn->query("UPDATE conteudos_laterais SET ativo = 0, data_desativacao = NOW() WHERE ativo = 1");
-
-   // Remover arquivos antigos da pasta ativa (manter compatibilidade)
    foreach (glob(SIDEBAR_PATH . '*') as $f) {
       if (is_file($f) && basename($f) !== $row['arquivo']) {
          unlink($f);
       }
    }
-
-   // Ativar o novo conteúdo
    $stmt = $conn->prepare("UPDATE conteudos_laterais SET ativo = 1, data_ativacao = NOW() WHERE id = ?");
    $stmt->bind_param("i", $id);
    $stmt->execute();
@@ -427,10 +406,6 @@ function ativarConteudoLateral($id)
 
    return true;
 }
-
-/**
- * Exclui um conteúdo lateral
- */
 function excluirConteudoLateral($id)
 {
    global $conn;
@@ -444,14 +419,10 @@ function excluirConteudoLateral($id)
       $arquivo = $row['arquivo'];
       $nomeOriginal = $row['nome_original'];
       $eraAtivo = $row['ativo'];
-
-      // Remover arquivo físico
       $caminhoArquivo = SIDEBAR_PATH . $arquivo;
       if (file_exists($caminhoArquivo)) {
          unlink($caminhoArquivo);
       }
-
-      // Remover do banco
       $deleteStmt = $conn->prepare("DELETE FROM conteudos_laterais WHERE id = ?");
       $deleteStmt->bind_param("i", $id);
       $deleteStmt->execute();
@@ -459,7 +430,6 @@ function excluirConteudoLateral($id)
 
       registrarLog('delete_lateral', "Conteúdo lateral excluído: {$nomeOriginal}");
 
-      // Se era o conteúdo ativo, sinalizar atualização
       if ($eraAtivo) {
          sinalizarAtualizacaoTV();
       }
@@ -471,10 +441,6 @@ function excluirConteudoLateral($id)
    $stmt->close();
    return false;
 }
-
-/**
- * Busca todos os conteúdos laterais
- */
 function buscarConteudosLaterais($apenasAtivos = false)
 {
    global $conn;
@@ -498,10 +464,6 @@ function buscarConteudosLaterais($apenasAtivos = false)
 
    return $conteudos;
 }
-
-/**
- * Busca o conteúdo lateral ativo
- */
 function buscarConteudoLateralAtivo()
 {
    global $conn;
@@ -515,10 +477,6 @@ function buscarConteudoLateralAtivo()
 
    return $conteudo;
 }
-
-/**
- * Atualiza descrição de um conteúdo lateral
- */
 function atualizarDescricaoLateral($id, $descricao)
 {
    global $conn;
@@ -534,10 +492,6 @@ function atualizarDescricaoLateral($id, $descricao)
 
    return $result;
 }
-
-/**
- * Desativa todos os conteúdos laterais
- */
 function desativarTodosConteudosLaterais()
 {
    global $conn;

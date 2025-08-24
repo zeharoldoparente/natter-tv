@@ -1,5 +1,6 @@
 <?php
 include "../includes/db.php";
+
 $codigo_canal = '';
 if (isset($_GET['canal']) && !empty($_GET['canal'])) {
    $codigo_canal = strtoupper(trim($_GET['canal']));
@@ -7,6 +8,7 @@ if (isset($_GET['canal']) && !empty($_GET['canal'])) {
       $codigo_canal = '';
    }
 }
+
 if (empty($codigo_canal)) {
    $canais_disponiveis = [];
    $res = $conn->query("SELECT DISTINCT codigo_canal, COUNT(*) as total_conteudos FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
@@ -15,10 +17,10 @@ if (empty($codigo_canal)) {
          $canais_disponiveis[] = $row;
       }
    }
-
    include 'selecionar_canal.php';
    exit;
 }
+
 $stmt = $conn->prepare("SELECT * FROM conteudos WHERE codigo_canal = ? AND ativo = 1 ORDER BY ordem_exibicao ASC, id ASC");
 $stmt->bind_param("s", $codigo_canal);
 $stmt->execute();
@@ -58,12 +60,9 @@ if (empty($conteudos)) {
 <body>
    <div id="conteudo-principal">
       <div id="media-container"></div>
-
-      <!-- RSS Container Topo -->
       <div id="rss-topo" class="rss-container topo hidden">
          <div class="rss-ticker" id="rss-ticker-topo"></div>
       </div>
-
       <div id="sidebar-direita">
          <div class="propaganda">
             <?php include "../includes/sidebar_content.php"; ?>
@@ -79,12 +78,10 @@ if (empty($conteudos)) {
             </div>
          </div>
       </div>
-
       <div id="rodape-bar">
          <div class="rodape-logo">
             <img src="../assets/images/tt Logo.png" alt="Logo">
          </div>
-         <!-- RSS Container Rodapé -->
          <div id="rss-rodape" class="rss-container rodape hidden">
             <div class="rss-ticker" id="rss-ticker-rodape"></div>
          </div>
@@ -115,13 +112,12 @@ if (empty($conteudos)) {
    <script>
       const CONFIG = {
          updateInterval: 30000,
-         rssUpdateInterval: 300000, // 5 minutos
+         rssUpdateInterval: 300000,
          showOverlay: false,
          fadeTransition: true,
          debug: false,
          canalAtual: '<?php echo $codigo_canal; ?>'
       };
-
       let conteudos = <?php echo json_encode($conteudos); ?>;
       let currentIndex = 0;
       let isPlaying = false;
@@ -132,42 +128,55 @@ if (empty($conteudos)) {
          rodape: [],
          topo: []
       };
-
+      let isFirstLoad = true;
       document.addEventListener('DOMContentLoaded', function() {
          initializeTV();
       });
 
       function initializeTV() {
          log('Inicializando TV Corporativa - Canal: ' + CONFIG.canalAtual);
-
+         requestFullscreenSilent();
          updateDateTime();
          setInterval(updateDateTime, 1000);
-
-         // Inicializar RSS imediatamente
          initializeRSS();
-
          if (conteudos.length === 0 || conteudos[0].id === 0) {
             showNoContentScreen();
          } else {
             startPlayback();
          }
 
-         setupUpdateChecker();
+         setTimeout(() => {
+            setupUpdateChecker();
+            isFirstLoad = false;
+         }, 5000);
+
          setupKeyboardControls();
 
          log('TV inicializada com sucesso para o canal ' + CONFIG.canalAtual);
       }
 
-      function initializeRSS() {
-         // Carregar RSS imediatamente ao inicializar
-         updateRSSContent();
+      function requestFullscreenSilent() {
+         if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {
+               log('Fullscreen automático não permitido pelo navegador');
+            });
+         }
+         document.addEventListener('click', function(e) {
+            if (!document.fullscreenElement) {
+               document.documentElement.requestFullscreen().catch(() => {});
+            }
+         }, {
+            once: false
+         });
+      }
 
-         // Configurar atualização periódica
+      function initializeRSS() {
+         updateRSSContent();
          if (rssTimer) {
             clearInterval(rssTimer);
          }
          rssTimer = setInterval(updateRSSContent, CONFIG.rssUpdateInterval);
-         log('Sistema RSS inicializado e carregado');
+         log('Sistema RSS inicializado');
       }
 
       function updateRSSContent() {
@@ -196,22 +205,17 @@ if (empty($conteudos)) {
       }
 
       function setupRSSTickers() {
-         // Configurar RSS do rodapé
          if (rssData.rodape && rssData.rodape.length > 0) {
             const rodapeContainer = document.getElementById('rss-rodape');
             const rodapeTicker = document.getElementById('rss-ticker-rodape');
-
             setupRSSPosition(rssData.rodape, rodapeTicker, rodapeContainer);
             rodapeContainer.classList.remove('hidden');
          } else {
             document.getElementById('rss-rodape').classList.add('hidden');
          }
-
-         // Configurar RSS do topo
          if (rssData.topo && rssData.topo.length > 0) {
             const topoContainer = document.getElementById('rss-topo');
             const topoTicker = document.getElementById('rss-ticker-topo');
-
             setupRSSPosition(rssData.topo, topoTicker, topoContainer);
             topoContainer.classList.remove('hidden');
          } else {
@@ -222,33 +226,20 @@ if (empty($conteudos)) {
       function setupRSSPosition(items, ticker, container) {
          if (!items || items.length === 0) return;
 
-         // Usar configuração do primeiro item
          const config = items[0].configuracao;
-
-         // Aplicar cores
          container.style.backgroundColor = config.cor_fundo;
          container.style.color = config.cor_texto;
-
-         // Criar conteúdo HTML com separadores limpos
          let tickerHTML = '';
          items.forEach((item) => {
-            // Adicionar apenas o texto da notícia, sem o nome do feed
             tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
          });
-
-         // Duplicar o conteúdo para criar loop contínuo
-         tickerHTML = tickerHTML + tickerHTML;
-
-         ticker.innerHTML = tickerHTML;
-
-         // CORREÇÃO DA VELOCIDADE: Limpar animações anteriores
+         ticker.innerHTML = tickerHTML + tickerHTML;
          ticker.style.animation = 'none';
          ticker.style.transform = 'translateX(0)';
 
-         // Aguardar o DOM atualizar para calcular larguras
          setTimeout(() => {
             const fullWidth = ticker.scrollWidth;
-            const contentWidth = fullWidth / 2; // largura original antes da duplicação
+            const contentWidth = fullWidth / 2;
             const containerWidth = container.offsetWidth;
 
             if (contentWidth <= containerWidth) {
@@ -257,48 +248,28 @@ if (empty($conteudos)) {
                return;
             }
 
-            // CORREÇÃO: Forçar recálculo e aplicar nova animação
-            ticker.offsetHeight; // Força reflow
-
-            // Calcular duração baseada na velocidade configurada (px/s)
-            const velocidade = Math.max(config.velocidade_scroll, 10); // Mínimo 10px/s
+            const velocidade = Math.max(config.velocidade_scroll, 10);
             const duration = contentWidth / velocidade;
 
-            // CORREÇÃO: Criar animação única para cada ticker
             const animationName = `scroll-horizontal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-            // Remover animação anterior se existir
             const existingStyle = document.getElementById(`rss-animation-${container.id}`);
             if (existingStyle) {
                existingStyle.remove();
             }
-
-            // Criar nova animação CSS
             const style = document.createElement('style');
             style.id = `rss-animation-${container.id}`;
             style.textContent = `
                @keyframes ${animationName} {
-                  0% {
-                     transform: translateX(0);
-                  }
-                  100% {
-                     transform: translateX(-${contentWidth}px);
-                  }
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-${contentWidth}px); }
                }
             `;
             document.head.appendChild(style);
 
-            // Aplicar nova animação
             ticker.style.animation = `${animationName} ${duration}s linear infinite`;
 
-            log(`RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s, largura: ${contentWidth}px`);
+            log(`RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s`);
          }, 100);
-      }
-
-      function escapeHtml(text) {
-         const div = document.createElement('div');
-         div.textContent = text;
-         return div.innerHTML;
       }
 
       function startPlayback() {
@@ -345,16 +316,15 @@ if (empty($conteudos)) {
             if (CONFIG.fadeTransition) {
                img.style.opacity = '0';
                container.appendChild(img);
-
                setTimeout(() => {
                   img.style.opacity = '1';
                }, 100);
             } else {
                container.appendChild(img);
             }
+
             const duration = content.duracao * 1000;
             contentTimer = setTimeout(nextContent, duration);
-
             log(`Imagem será exibida por ${content.duracao} segundos`);
          };
 
@@ -405,10 +375,9 @@ if (empty($conteudos)) {
             clearTimeout(contentTimer);
             contentTimer = null;
          }
+
          currentIndex = (currentIndex + 1) % conteudos.length;
-
          log(`Avançando para conteúdo ${currentIndex + 1} de ${conteudos.length}`);
-
          setTimeout(showContent, 500);
       }
 
@@ -418,7 +387,12 @@ if (empty($conteudos)) {
       }
 
       function checkForUpdates() {
+         if (isFirstLoad) {
+            return;
+         }
+
          log('Verificando atualizações para canal ' + CONFIG.canalAtual + '...');
+
          fetch('../temp/tv_update.txt', {
                cache: 'no-cache',
                headers: {
@@ -439,7 +413,7 @@ if (empty($conteudos)) {
                   localStorage.setItem('last_tv_update_' + CONFIG.canalAtual, timestamp);
                   setTimeout(() => {
                      window.location.reload();
-                  }, 2000);
+                  }, 3000);
                }
             })
             .catch(error => {
@@ -448,6 +422,10 @@ if (empty($conteudos)) {
       }
 
       function checkContentUpdates() {
+         if (isFirstLoad) {
+            return;
+         }
+
          fetch(`get_contents.php?canal=${CONFIG.canalAtual}`, {
                cache: 'no-cache',
                headers: {
@@ -460,7 +438,7 @@ if (empty($conteudos)) {
                   log('Novos conteúdos detectados para canal ' + CONFIG.canalAtual + '! Atualizando...');
                   conteudos = newContents;
 
-                  if (!isPlaying) {
+                  if (!isPlaying && newContents.length > 0) {
                      startPlayback();
                   }
                }
@@ -468,55 +446,6 @@ if (empty($conteudos)) {
             .catch(error => {
                log('Erro ao verificar atualizações: ' + error.message);
             });
-      }
-
-      function showLoading() {
-         document.getElementById('loading').classList.remove('hidden');
-      }
-
-      function hideLoading() {
-         document.getElementById('loading').classList.add('hidden');
-      }
-
-      function showNoContentScreen() {
-         document.getElementById('conteudo-principal').classList.add('hidden');
-         document.getElementById('tela-sem-conteudo').classList.remove('hidden');
-         isPlaying = false;
-
-         log('Exibindo tela de sem conteúdo para canal ' + CONFIG.canalAtual);
-      }
-
-      function hideNoContentScreen() {
-         document.getElementById('conteudo-principal').classList.remove('hidden');
-         document.getElementById('tela-sem-conteudo').classList.add('hidden');
-      }
-
-      function updateDateTime() {
-         const now = new Date();
-
-         const timeOptions = {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-         };
-
-         const dateOptions = {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-         };
-         const horarioElements = document.querySelectorAll('#horario');
-         const dataElements = document.querySelectorAll('#data');
-
-         horarioElements.forEach(element => {
-            element.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
-         });
-
-         dataElements.forEach(element => {
-            element.textContent = now.toLocaleDateString('pt-BR', dateOptions);
-         });
       }
 
       function setupKeyboardControls() {
@@ -554,19 +483,66 @@ if (empty($conteudos)) {
          });
       }
 
+      function updateDateTime() {
+         const now = new Date();
+
+         const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+         };
+
+         const dateOptions = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+         };
+
+         const horarioElements = document.querySelectorAll('#horario');
+         const dataElements = document.querySelectorAll('#data');
+
+         horarioElements.forEach(element => {
+            element.textContent = now.toLocaleTimeString('pt-BR', timeOptions);
+         });
+
+         dataElements.forEach(element => {
+            element.textContent = now.toLocaleDateString('pt-BR', dateOptions);
+         });
+      }
+
+      function showLoading() {
+         document.getElementById('loading').classList.remove('hidden');
+      }
+
+      function hideLoading() {
+         document.getElementById('loading').classList.add('hidden');
+      }
+
+      function showNoContentScreen() {
+         document.getElementById('conteudo-principal').classList.add('hidden');
+         document.getElementById('tela-sem-conteudo').classList.remove('hidden');
+         isPlaying = false;
+         log('Exibindo tela de sem conteúdo para canal ' + CONFIG.canalAtual);
+      }
+
+      function hideNoContentScreen() {
+         document.getElementById('conteudo-principal').classList.remove('hidden');
+         document.getElementById('tela-sem-conteudo').classList.add('hidden');
+      }
+
+      function escapeHtml(text) {
+         const div = document.createElement('div');
+         div.textContent = text;
+         return div.innerHTML;
+      }
+
       function log(message) {
          if (CONFIG.debug) {
             console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
-
-      document.addEventListener('click', function() {
-         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-               log('Erro ao entrar em fullscreen: ' + err.message);
-            });
-         }
-      });
    </script>
 </body>
 

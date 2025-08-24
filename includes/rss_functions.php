@@ -1,15 +1,9 @@
 <?php
-
-/**
- * Funções para gerenciamento de RSS
- */
-
 function atualizarFeedRSS($feed_id)
 {
    global $conn;
 
    try {
-      // Buscar informações do feed
       $stmt = $conn->prepare("SELECT * FROM feeds_rss WHERE id = ? AND ativo = 1");
       $stmt->bind_param("i", $feed_id);
       $stmt->execute();
@@ -21,8 +15,6 @@ function atualizarFeedRSS($feed_id)
       $stmt->close();
 
       echo "Atualizando feed: " . $feed['nome'] . " - URL: " . $feed['url_feed'] . "\n";
-
-      // Configurar contexto para requisição HTTP
       $context = stream_context_create([
          'http' => [
             'timeout' => 30,
@@ -34,8 +26,6 @@ function atualizarFeedRSS($feed_id)
             ]
          ]
       ]);
-
-      // Fazer requisição para o feed RSS
       $rss_content = @file_get_contents($feed['url_feed'], false, $context);
 
       if ($rss_content === false) {
@@ -46,8 +36,6 @@ function atualizarFeedRSS($feed_id)
       if (empty($rss_content)) {
          throw new Exception("Feed retornou conteúdo vazio");
       }
-
-      // Parse do XML
       $prev_setting = libxml_use_internal_errors(true);
       libxml_clear_errors();
 
@@ -63,18 +51,13 @@ function atualizarFeedRSS($feed_id)
       }
 
       libxml_use_internal_errors($prev_setting);
-
-      // Processar itens do feed
       $itens_processados = 0;
-      $max_items = 50; // Máximo de itens por feed
+      $max_items = 50;
 
-      // Determinar o tipo de feed (RSS ou Atom)
       if (isset($xml->channel)) {
-         // Feed RSS 2.0
          $items = $xml->channel->item;
          echo "Tipo: RSS 2.0 - Items encontrados: " . count($items) . "\n";
       } elseif (isset($xml->entry)) {
-         // Feed Atom
          $items = $xml->entry;
          echo "Tipo: Atom - Entries encontrados: " . count($items) . "\n";
       } else {
@@ -85,24 +68,19 @@ function atualizarFeedRSS($feed_id)
          if ($itens_processados >= $max_items) break;
 
          try {
-            // Extrair dados do item
             if (isset($xml->channel)) {
-               // RSS 2.0
                $titulo = (string)$item->title;
                $link = (string)$item->link;
                $descricao = (string)$item->description;
                $data_pub = (string)$item->pubDate;
                $guid = isset($item->guid) ? (string)$item->guid : $link;
             } else {
-               // Atom
                $titulo = (string)$item->title;
                $link = isset($item->link['href']) ? (string)$item->link['href'] : (string)$item->id;
                $descricao = isset($item->summary) ? (string)$item->summary : (string)$item->content;
                $data_pub = isset($item->updated) ? (string)$item->updated : (string)$item->published;
                $guid = (string)$item->id;
             }
-
-            // Limpar e validar dados
             $titulo = trim(html_entity_decode(strip_tags($titulo), ENT_QUOTES, 'UTF-8'));
             $descricao = trim(html_entity_decode(strip_tags($descricao), ENT_QUOTES, 'UTF-8'));
 
@@ -110,8 +88,6 @@ function atualizarFeedRSS($feed_id)
                echo "Item sem título, pulando...\n";
                continue;
             }
-
-            // Converter data para formato MySQL
             $data_mysql = null;
             if (!empty($data_pub)) {
                $timestamp = strtotime($data_pub);
@@ -119,15 +95,11 @@ function atualizarFeedRSS($feed_id)
                   $data_mysql = date('Y-m-d H:i:s', $timestamp);
                }
             }
-
-            // Criar GUID único se não existir
             if (empty($guid)) {
                $guid = md5($titulo . $link);
             }
 
             echo "Processando: " . substr($titulo, 0, 50) . "...\n";
-
-            // Inserir ou atualizar item no cache
             $stmt = $conn->prepare("
                     INSERT INTO cache_rss (feed_id, titulo, link, descricao, data_publicacao, guid, data_cache)
                     VALUES (?, ?, ?, ?, ?, ?, NOW())
@@ -152,14 +124,10 @@ function atualizarFeedRSS($feed_id)
             continue;
          }
       }
-
-      // Atualizar timestamp de última atualização
       $stmt = $conn->prepare("UPDATE feeds_rss SET ultima_atualizacao = NOW() WHERE id = ?");
       $stmt->bind_param("i", $feed_id);
       $stmt->execute();
       $stmt->close();
-
-      // Limpar itens antigos do cache (manter apenas últimos 100 por feed)
       $stmt = $conn->prepare("
             DELETE FROM cache_rss 
             WHERE feed_id = ? 
@@ -206,7 +174,6 @@ function atualizarTodosFeedsRSS()
          $feeds_atualizados++;
          $total_itens += $itens;
       } catch (Exception $e) {
-         // Log já feito na função atualizarFeedRSS
          continue;
       }
    }
@@ -249,8 +216,6 @@ function formatarTextoRSS($titulo, $descricao = '', $max_length = 200)
    if (!empty($descricao) && strlen($titulo) < 100) {
       $texto .= " - " . $descricao;
    }
-
-   // Limitar tamanho
    if (strlen($texto) > $max_length) {
       $texto = substr($texto, 0, $max_length - 3) . '...';
    }
@@ -260,8 +225,6 @@ function formatarTextoRSS($titulo, $descricao = '', $max_length = 200)
 
 function agendarAtualizacaoRSS()
 {
-   // Esta função pode ser chamada via cron job
-   // Para atualizar automaticamente os feeds RSS
    try {
       atualizarTodosFeedsRSS();
       echo "RSS feeds atualizados com sucesso\n";

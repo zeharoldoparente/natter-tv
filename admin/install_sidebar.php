@@ -9,8 +9,6 @@ include "../includes/db.php";
 
 try {
    echo "<h2>Instalando Sistema de Gerenciamento de Conteúdo Lateral</h2>";
-
-   // 1. Criar tabela de conteúdos laterais
    echo "<p>1. Criando tabela conteudos_laterais...</p>";
 
    $sqlConteudosLaterais = "
@@ -40,8 +38,6 @@ try {
    } else {
       throw new Exception("Erro ao criar tabela conteudos_laterais: " . $conn->error);
    }
-
-   // 2. Adicionar configuração para sidebar
    echo "<p>2. Adicionando configurações...</p>";
 
    $configSidebar = [
@@ -71,8 +67,6 @@ try {
          echo "<span style='color: orange;'>⚠ Configuração '{$config[0]}' já existe.</span><br>";
       }
    }
-
-   // 3. Verificar e migrar arquivos existentes
    echo "<p>3. Verificando arquivos de sidebar existentes...</p>";
 
    $sidebarPath = "../sidebar/";
@@ -93,8 +87,6 @@ try {
                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
                $tipo = in_array($ext, ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']) ? 'video' : 'imagem';
                $tamanho = filesize($caminhoCompleto);
-
-               // Obter dimensões se for imagem
                $dimensoes = '';
                if ($tipo === 'imagem') {
                   $info = getimagesize($caminhoCompleto);
@@ -102,8 +94,6 @@ try {
                      $dimensoes = $info[0] . 'x' . $info[1];
                   }
                }
-
-               // Verificar se já foi migrado
                $checkMigrated = $conn->prepare("SELECT COUNT(*) as count FROM conteudos_laterais WHERE arquivo = ?");
                $checkMigrated->bind_param("s", $file);
                $checkMigrated->execute();
@@ -111,7 +101,6 @@ try {
                $checkMigrated->close();
 
                if (!$already_migrated) {
-                  // Inserir no banco
                   $stmt = $conn->prepare("
                             INSERT INTO conteudos_laterais 
                             (arquivo, nome_original, tipo, tamanho, dimensoes, ativo, data_ativacao, descricao) 
@@ -142,8 +131,6 @@ try {
    } else {
       echo "<span style='color: orange;'>⚠ Pasta de sidebar não encontrada.</span><br>";
    }
-
-   // 4. Verificar se as funções necessárias existem no functions.php
    echo "<p>4. Verificando funções necessárias...</p>";
 
    $required_functions = [

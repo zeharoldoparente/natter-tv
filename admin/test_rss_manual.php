@@ -1,5 +1,4 @@
 <?php
-// Crie este arquivo como test_rss_manual.php na pasta admin para testar
 
 session_start();
 include "../includes/db.php";
@@ -7,14 +6,10 @@ include "../includes/functions.php";
 include "../includes/rss_functions.php";
 
 echo "<h2>Teste Manual do Sistema RSS</h2>";
-
-// URL do seu feed RSS
 $feed_url = "https://rss.app/feeds/ZRuKQ29wRI1J1RnT.xml";
 
 echo "<h3>1. Testando conexão com o feed:</h3>";
 echo "URL: " . $feed_url . "<br>";
-
-// Teste de conexão
 $context = stream_context_create([
    'http' => [
       'timeout' => 30,
@@ -31,8 +26,6 @@ if ($content === false) {
 } else {
    echo "<span style='color: green;'>✅ Feed acessado com sucesso</span><br>";
    echo "Tamanho do conteúdo: " . strlen($content) . " bytes<br>";
-
-   // Teste de parse XML
    echo "<h3>2. Testando parse do XML:</h3>";
    $xml = simplexml_load_string($content);
 
@@ -73,7 +66,6 @@ if ($content === false) {
 echo "<h3>4. Inserindo feed no banco (teste):</h3>";
 
 try {
-   // Verificar se já existe
    $check = $conn->prepare("SELECT id FROM feeds_rss WHERE url_feed = ?");
    $check->bind_param("s", $feed_url);
    $check->execute();
@@ -83,7 +75,6 @@ try {
       echo "Feed já existe com ID: " . $existing['id'] . "<br>";
       $feed_id = $existing['id'];
    } else {
-      // Inserir novo feed
       $stmt = $conn->prepare("
             INSERT INTO feeds_rss (nome, url_feed, codigo_canal, velocidade_scroll, cor_texto, cor_fundo, posicao, usuario_upload) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -133,8 +124,6 @@ try {
 
 echo "<hr>";
 echo "<h3>Status das tabelas:</h3>";
-
-// Verificar tabelas
 $tables = ['feeds_rss', 'cache_rss'];
 foreach ($tables as $table) {
    $check = $conn->query("SHOW TABLES LIKE '$table'");

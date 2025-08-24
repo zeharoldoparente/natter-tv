@@ -1,5 +1,4 @@
 <?php
-// sidebar.php - Nova página para gerenciar conteúdo lateral
 session_start();
 if (!isset($_SESSION['logado'])) {
    header("Location: index.php");
@@ -11,8 +10,6 @@ include "../includes/functions.php";
 
 $mensagem = '';
 $erro = '';
-
-// Processar ações
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    try {
       if (!verificarTokenCSRF($_POST['csrf_token'])) {
@@ -58,8 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $erro = $e->getMessage();
    }
 }
-
-// Excluir conteúdo
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    try {
       $id = (int)$_GET['delete'];
@@ -72,8 +67,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
       $erro = $e->getMessage();
    }
 }
-
-// Buscar conteúdos laterais
 $conteudos = buscarConteudosLaterais();
 $conteudoAtivo = buscarConteudoLateralAtivo();
 ?>
@@ -105,7 +98,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
    </nav>
-
    <main class="main-content">
       <header class="topbar">
          <h1><i class="fas fa-rectangle-wide"></i> Gerenciar Conteúdo Lateral</h1>
@@ -113,21 +105,17 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
             <span>Bem-vindo, <?php echo $_SESSION['nome'] ?? 'Admin'; ?>!</span>
          </div>
       </header>
-
       <div class="content">
          <?php if ($mensagem): ?>
             <div class="alert alert-success">
                <i class="fas fa-check-circle"></i> <?php echo $mensagem; ?>
             </div>
          <?php endif; ?>
-
          <?php if ($erro): ?>
             <div class="alert alert-error">
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
-
-         <!-- Status Atual -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-info-circle"></i> Status Atual</h3>
@@ -155,7 +143,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                         <?php if ($conteudoAtivo['descricao']): ?>
                            <p><strong>Descrição:</strong> <?php echo htmlspecialchars($conteudoAtivo['descricao']); ?></p>
                         <?php endif; ?>
-
                         <div class="actions mt-15">
                            <form method="POST" class="inline-block">
                               <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
@@ -179,8 +166,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                <?php endif; ?>
             </div>
          </div>
-
-         <!-- Upload de Novo Conteúdo -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo Lateral</h3>
@@ -203,7 +188,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                         <input type="file" name="arquivo" id="arquivo" accept="image/*,video/*" required>
                      </div>
                   </div>
-
                   <div class="form-group">
                      <label for="descricao">
                         <i class="fas fa-comment"></i> Descrição (Opcional)
@@ -211,14 +195,12 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                      <textarea name="descricao" id="descricao" rows="3"
                         placeholder="Descrição ou observações sobre este conteúdo"></textarea>
                   </div>
-
                   <div class="form-group">
                      <label>
                         <input type="checkbox" name="ativar_imediatamente" id="ativar_imediatamente" checked>
                         Ativar imediatamente após upload
                      </label>
                   </div>
-
                   <div class="form-actions">
                      <button type="submit" name="upload_lateral" class="btn btn-success">
                         <i class="fas fa-upload"></i> Enviar Conteúdo
@@ -227,8 +209,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                </form>
             </div>
          </div>
-
-         <!-- Lista de Conteúdos -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Histórico de Conteúdos Laterais</h3>
@@ -320,8 +300,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          </div>
       </div>
    </main>
-
-   <!-- Modal para editar descrição -->
    <div id="edit-description-modal" class="modal">
       <div class="modal-content">
          <span class="close" onclick="closeDescriptionModal()">&times;</span>
@@ -329,13 +307,11 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          <form method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
             <input type="hidden" name="conteudo_id" id="edit-content-id">
-
             <div class="form-group">
                <label for="nova_descricao">Descrição:</label>
                <textarea name="nova_descricao" id="nova_descricao" rows="3"
                   placeholder="Digite a nova descrição"></textarea>
             </div>
-
             <div class="form-actions">
                <button type="submit" name="atualizar_descricao" class="btn btn-primary">
                   <i class="fas fa-save"></i> Salvar
@@ -347,10 +323,8 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          </form>
       </div>
    </div>
-
    <script src="../assets/js/admin.js"></script>
    <script>
-      // Editar descrição
       function editDescription(id, currentDescription) {
          document.getElementById('edit-content-id').value = id;
          document.getElementById('nova_descricao').value = currentDescription;
@@ -360,92 +334,185 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
       function closeDescriptionModal() {
          document.getElementById('edit-description-modal').classList.remove('visible');
       }
-
-      // Drag and drop para upload
       const dropZone = document.getElementById('dropZone');
       const fileInput = document.getElementById('arquivo');
 
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-         dropZone.addEventListener(eventName, preventDefaults, false);
-      });
+      if (dropZone && fileInput) {
+         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+         });
 
-      function preventDefaults(e) {
-         e.preventDefault();
-         e.stopPropagation();
-      }
-
-      ['dragenter', 'dragover'].forEach(eventName => {
-         dropZone.addEventListener(eventName, highlight, false);
-      });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-         dropZone.addEventListener(eventName, unhighlight, false);
-      });
-
-      function highlight(e) {
-         dropZone.classList.add('dragover');
-      }
-
-      function unhighlight(e) {
-         dropZone.classList.remove('dragover');
-      }
-
-      dropZone.addEventListener('drop', handleDrop, false);
-
-      function handleDrop(e) {
-         const dt = e.dataTransfer;
-         const files = dt.files;
-
-         if (files.length > 0) {
-            fileInput.files = files;
-            showFilePreview(files[0]);
+         function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
          }
+
+         ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+         });
+
+         ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+         });
+
+         function highlight(e) {
+            dropZone.classList.add('dragover');
+         }
+
+         function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+         }
+
+         dropZone.addEventListener('drop', handleDrop, false);
+
+         function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+               fileInput.files = files;
+               showFilePreviewSidebar(files[0]);
+            }
+         }
+         fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+               showFilePreviewSidebar(e.target.files[0]);
+            }
+         });
       }
 
-      // Preview do arquivo
-      fileInput.addEventListener('change', function(e) {
-         if (e.target.files.length > 0) {
-            showFilePreview(e.target.files[0]);
+      function showFilePreviewSidebar(file) {
+         console.log('Iniciando preview do arquivo sidebar:', file.name, file.type);
+         if (!validateFileSidebar(file)) {
+            return;
          }
-      });
+         let preview = document.getElementById('sidebarFilePreview');
+         if (!preview) {
+            preview = createPreviewContainerSidebar();
+         }
 
-      function showFilePreview(file) {
+         const mediaContainer = preview.querySelector('.preview-media');
+         const fileName = preview.querySelector('.file-name');
+         const fileSize = preview.querySelector('.file-size');
+         const fileType = preview.querySelector('.file-type');
+         if (mediaContainer) {
+            mediaContainer.innerHTML = '';
+         }
+         if (fileName) fileName.textContent = file.name;
+         if (fileSize) fileSize.textContent = formatFileSize(file.size);
+         if (fileType) fileType.textContent = getFileTypeLabel(file.type);
+         const reader = new FileReader();
+         reader.onload = function(e) {
+            console.log('Arquivo carregado para preview sidebar');
+
+            let mediaElement;
+            const dataUrl = e.target.result;
+
+            if (file.type.startsWith('image/')) {
+               mediaElement = document.createElement('img');
+               mediaElement.src = dataUrl;
+               mediaElement.alt = file.name;
+               mediaElement.style.cssText = `
+               max-width: 150px;
+               max-height: 120px;
+               object-fit: cover;
+               border-radius: 8px;
+               border: 2px solid #166353;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            `;
+            } else if (file.type.startsWith('video/')) {
+               mediaElement = document.createElement('video');
+               mediaElement.src = dataUrl;
+               mediaElement.controls = true;
+               mediaElement.muted = true;
+               mediaElement.preload = 'metadata';
+               mediaElement.style.cssText = `
+               max-width: 150px;
+               max-height: 120px;
+               border-radius: 8px;
+               border: 2px solid #166353;
+               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            `;
+            }
+
+            if (mediaElement && mediaContainer) {
+               mediaContainer.appendChild(mediaElement);
+               console.log('Preview sidebar criado com sucesso');
+            }
+         };
+
+         reader.onerror = function() {
+            console.error('Erro ao carregar arquivo para preview sidebar');
+            showAlert('Erro ao carregar preview do arquivo', 'error');
+         };
+
+         reader.readAsDataURL(file);
+         preview.classList.remove('hidden');
+      }
+
+      function createPreviewContainerSidebar() {
+         console.log('Criando container de preview para sidebar');
+
          const preview = document.createElement('div');
+         preview.id = 'sidebarFilePreview';
          preview.className = 'file-preview';
          preview.innerHTML = `
-                <div class="preview-content">
-                    ${file.type.startsWith('video/') ?
-                            `<video src="${URL.createObjectURL(file)}" controls></video>` :
-                            `<img src="${URL.createObjectURL(file)}">`
-                     }
-                    </div>
-                    <div class="preview-info">
-                        <h5>${file.name}</h5>
-                        <p>Tamanho: ${formatFileSize(file.size)}</p>
-                        <p>Tipo: ${file.type.startsWith('video/') ? 'Vídeo' : 'Imagem'}</p>
-                    </div>
-                    <button type="button" class="btn-remove-file" onclick="removeFilePreview()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-
-         // Remover preview anterior se existir
-         const existingPreview = document.querySelector('.file-preview');
-         if (existingPreview) {
-            existingPreview.remove();
+         <div class="preview-content">
+            <div class="preview-media">
+               <div style="color: #999; font-size: 0.9rem;">Preview aparecerá aqui</div>
+            </div>
+            <div class="preview-info">
+               <h5 class="file-name"></h5>
+               <p class="file-size"></p>
+               <p class="file-type"></p>
+            </div>
+            <button type="button" class="btn-remove-file" onclick="removeFilePreviewSidebar()">
+               <i class="fas fa-times"></i>
+            </button>
+         </div>
+      `;
+         const dropZone = document.getElementById('dropZone');
+         if (dropZone && dropZone.parentNode) {
+            dropZone.parentNode.insertBefore(preview, dropZone.nextSibling);
          }
 
-         // Adicionar novo preview após o drop-zone
-         dropZone.parentNode.insertBefore(preview, dropZone.nextSibling);
+         return preview;
       }
 
-      function removeFilePreview() {
-         const preview = document.querySelector('.file-preview');
+      function removeFilePreviewSidebar() {
+         console.log('Removendo preview sidebar');
+
+         const preview = document.getElementById('sidebarFilePreview');
          if (preview) {
-            preview.remove();
+            preview.classList.add('hidden');
          }
-         fileInput.value = '';
+
+         const fileInput = document.getElementById('arquivo');
+         if (fileInput) {
+            fileInput.value = '';
+         }
+      }
+
+      function validateFileSidebar(file) {
+         const maxSize = 52428800;
+         const allowedTypes = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+            'image/webp', 'image/bmp',
+            'video/mp4', 'video/avi', 'video/mov', 'video/wmv',
+            'video/flv', 'video/webm', 'video/mkv'
+         ];
+
+         if (file.size > maxSize) {
+            showAlert('Arquivo muito grande! Máximo permitido: 50MB', 'error');
+            return false;
+         }
+
+         if (!allowedTypes.includes(file.type)) {
+            showAlert(`Tipo de arquivo não permitido: ${file.type}`, 'error');
+            return false;
+         }
+
+         return true;
       }
 
       function formatFileSize(bytes) {
@@ -456,84 +523,133 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       }
 
-      // Adicionar estilo para linha ativa
-      const style = document.createElement('style');
-      style.textContent = `
-            .active-row {
-                background-color: #e8f5e8 !important;
-                border-left: 4px solid #27ae60;
+      function getFileTypeLabel(mimeType) {
+         if (mimeType.startsWith('image/')) {
+            return 'Imagem';
+         } else if (mimeType.startsWith('video/')) {
+            return 'Vídeo';
+         }
+         return 'Arquivo';
+      }
+
+      function showAlert(message, type = 'info') {
+         const existingAlerts = document.querySelectorAll('.alert-dynamic');
+         existingAlerts.forEach((alert) => alert.remove());
+
+         const alert = document.createElement('div');
+         alert.className = `alert alert-${type} alert-dynamic`;
+
+         const icon = type === 'success' ? 'check-circle' :
+            type === 'error' ? 'exclamation-circle' : 'info-circle';
+
+         alert.innerHTML = `
+         <i class="fas fa-${icon}"></i> ${message}
+         <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+         </button>
+      `;
+
+         const content = document.querySelector('.content');
+         if (content) {
+            content.insertBefore(alert, content.firstChild);
+         }
+         setTimeout(() => {
+            if (alert.parentNode) {
+               alert.remove();
             }
-            
-            .current-sidebar-content {
-                display: flex;
-                gap: 20px;
-                align-items: center;
-            }
-            
-            .sidebar-preview {
-                flex-shrink: 0;
-            }
-            
-            .sidebar-media {
-                max-width: 200px;
-                max-height: 150px;
-                border-radius: 8px;
-                border: 2px solid #ddd;
-                object-fit: cover;
-            }
-            
-            .sidebar-info {
-                flex-grow: 1;
-            }
-            
-            .no-content {
-                text-align: center;
-                padding: 40px 20px;
-                color: #666;
-            }
-            
-            .description-cell {
-                max-width: 200px;
-            }
-            
-            .description-text {
-                display: block;
-                margin-bottom: 5px;
-                word-break: break-word;
-            }
-            
-            .file-preview {
-                margin-top: 15px;
-                border: 2px solid #e1e8ed;
-                border-radius: 10px;
-                padding: 15px;
-            }
-            
-            .preview-content {
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                position: relative;
-            }
-            
-            .btn-remove-file {
-                position: absolute;
-                top: -10px;
-                right: -10px;
-                width: 25px;
-                height: 25px;
-                border-radius: 50%;
-                background: #e74c3c;
-                color: white;
-                border: none;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-            }
-        `;
-      document.head.appendChild(style);
+         }, 5000);
+      }
+      if (!document.getElementById('sidebar-preview-styles')) {
+         const style = document.createElement('style');
+         style.id = 'sidebar-preview-styles';
+         style.textContent = `
+         .file-preview {
+            margin-top: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            animation: slideDown 0.3s ease-out;
+         }
+         
+         .preview-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+         }
+         
+         .preview-media {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            min-height: 120px;
+            background: #fff;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+         }
+         
+         .preview-info h5 {
+            margin: 0 0 5px 0;
+            color: #166353;
+            font-size: 1rem;
+            word-break: break-word;
+         }
+         
+         .preview-info p {
+            margin: 2px 0;
+            color: #666;
+            font-size: 0.9rem;
+         }
+         
+         .btn-remove-file {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+         }
+         
+         .hidden {
+            display: none !important;
+         }
+         
+         @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+         }
+         
+         .alert-dynamic {
+            position: relative;
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease-out;
+         }
+         
+         .alert-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: inherit;
+            opacity: 0.7;
+            cursor: pointer;
+            font-size: 1.2rem;
+         }
+      `;
+         document.head.appendChild(style);
+      }
    </script>
 </body>
 

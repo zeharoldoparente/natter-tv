@@ -10,8 +10,6 @@ include "../includes/rss_functions.php";
 
 $mensagem = '';
 $erro = '';
-
-// Processar ações
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    try {
       if (!verificarTokenCSRF($_POST['csrf_token'])) {
@@ -38,9 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          if (empty($codigo_canal)) {
             $codigo_canal = 'TODOS';
          }
-
-         // CORREÇÃO: Buscar o usuario_id da sessão
-         $usuario_id = $_SESSION['usuario_id'] ?? 1; // Usar 1 como fallback se não houver
+         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
          $stmt = $conn->prepare("
         INSERT INTO feeds_rss (nome, url_feed, codigo_canal, velocidade_scroll, cor_texto, cor_fundo, posicao, usuario_upload) 
@@ -110,8 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $erro = $e->getMessage();
    }
 }
-
-// Excluir feed
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $id = (int)$_GET['delete'];
 
@@ -124,8 +118,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    }
    $stmt->close();
 }
-
-// Buscar feeds existentes
 $feeds = [];
 $res = $conn->query("
     SELECT f.*, COUNT(c.id) as total_itens,
@@ -141,8 +133,6 @@ if ($res) {
       $feeds[] = $row;
    }
 }
-
-// Buscar canais disponíveis
 $canais = [];
 $res = $conn->query("SELECT DISTINCT codigo_canal FROM conteudos WHERE ativo = 1 ORDER BY codigo_canal");
 if ($res) {
@@ -200,8 +190,6 @@ if ($res) {
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
-
-         <!-- Controles Gerais -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-sync"></i> Controles RSS</h3>
@@ -218,8 +206,6 @@ if ($res) {
                </a>
             </div>
          </div>
-
-         <!-- Adicionar Novo Feed -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-plus"></i> Adicionar Feed RSS</h3>
@@ -235,7 +221,6 @@ if ($res) {
                         </label>
                         <input type="text" name="nome" id="nome" required placeholder="Ex: Notícias Globo">
                      </div>
-
                      <div class="form-group">
                         <label for="url_feed">
                            <i class="fas fa-link"></i> URL do Feed RSS
@@ -243,7 +228,6 @@ if ($res) {
                         <input type="url" name="url_feed" id="url_feed" required placeholder="https://example.com/rss.xml">
                      </div>
                   </div>
-
                   <div class="form-row">
                      <div class="form-group">
                         <label for="codigo_canal">
@@ -258,7 +242,6 @@ if ($res) {
                            <?php endforeach; ?>
                         </select>
                      </div>
-
                      <div class="form-group">
                         <label for="velocidade">
                            <i class="fas fa-tachometer-alt"></i> Velocidade do Scroll (px/s)
@@ -266,7 +249,6 @@ if ($res) {
                         <input type="number" name="velocidade" id="velocidade" value="50" min="10" max="1000">
                      </div>
                   </div>
-
                   <div class="form-row">
                      <div class="form-group">
                         <label for="cor_texto">
@@ -274,14 +256,12 @@ if ($res) {
                         </label>
                         <input type="color" name="cor_texto" id="cor_texto" value="#FFFFFF">
                      </div>
-
                      <div class="form-group">
                         <label for="cor_fundo">
                            <i class="fas fa-fill-drip"></i> Cor do Fundo
                         </label>
                         <input type="color" name="cor_fundo" id="cor_fundo" value="#000000">
                      </div>
-
                      <div class="form-group">
                         <label for="posicao">
                            <i class="fas fa-arrows-alt-v"></i> Posição
@@ -292,7 +272,6 @@ if ($res) {
                         </select>
                      </div>
                   </div>
-
                   <div class="form-actions">
                      <button type="submit" name="adicionar_feed" class="btn btn-success">
                         <i class="fas fa-plus"></i> Adicionar Feed
@@ -301,8 +280,6 @@ if ($res) {
                </form>
             </div>
          </div>
-
-         <!-- Lista de Feeds -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Feeds RSS Cadastrados</h3>
@@ -378,7 +355,6 @@ if ($res) {
          </div>
       </div>
    </main>
-   <!-- Modal de edição de Feed -->
    <div id="edit-modal" class="modal">
       <div class="modal-content">
          <span class="close" onclick="fecharModal()">&times;</span>
@@ -386,19 +362,16 @@ if ($res) {
          <form method="POST" class="rss-form">
             <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
             <input type="hidden" name="feed_id" id="edit-feed-id">
-
             <div class="form-row">
                <div class="form-group">
                   <label for="edit-nome"><i class="fas fa-tag"></i> Nome do Feed</label>
                   <input type="text" name="nome" id="edit-nome" required>
                </div>
-
                <div class="form-group">
                   <label for="edit-url_feed"><i class="fas fa-link"></i> URL do Feed RSS</label>
                   <input type="url" name="url_feed" id="edit-url_feed" required>
                </div>
             </div>
-
             <div class="form-row">
                <div class="form-group">
                   <label for="edit-codigo_canal"><i class="fas fa-tv"></i> Canal</label>
@@ -409,24 +382,20 @@ if ($res) {
                      <?php endforeach; ?>
                   </select>
                </div>
-
                <div class="form-group">
                   <label for="edit-velocidade"><i class="fas fa-tachometer-alt"></i> Velocidade do Scroll (px/s)</label>
                   <input type="number" name="velocidade" id="edit-velocidade" min="10" max="1000">
                </div>
             </div>
-
             <div class="form-row">
                <div class="form-group">
                   <label for="edit-cor_texto"><i class="fas fa-palette"></i> Cor do Texto</label>
                   <input type="color" name="cor_texto" id="edit-cor_texto">
                </div>
-
                <div class="form-group">
                   <label for="edit-cor_fundo"><i class="fas fa-fill-drip"></i> Cor do Fundo</label>
                   <input type="color" name="cor_fundo" id="edit-cor_fundo">
                </div>
-
                <div class="form-group">
                   <label for="edit-posicao"><i class="fas fa-arrows-alt-v"></i> Posição</label>
                   <select name="posicao" id="edit-posicao">
@@ -435,13 +404,11 @@ if ($res) {
                   </select>
                </div>
             </div>
-
             <div class="form-row">
                <div class="form-group">
                   <label><input type="checkbox" name="ativo" id="edit-ativo"> Ativo</label>
                </div>
             </div>
-
             <div class="form-actions">
                <button type="submit" name="atualizar_feed" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
                <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
@@ -449,7 +416,6 @@ if ($res) {
          </form>
       </div>
    </div>
-
    <script src="../assets/js/admin.js"></script>
    <script>
       const feedsData = <?php echo json_encode($feeds); ?>;
@@ -457,7 +423,6 @@ if ($res) {
       function editarFeed(id) {
          const feed = feedsData.find((f) => f.id == id);
          if (!feed) return;
-
          document.getElementById('edit-feed-id').value = feed.id;
          document.getElementById('edit-nome').value = feed.nome;
          document.getElementById('edit-url_feed').value = feed.url_feed;
@@ -467,7 +432,6 @@ if ($res) {
          document.getElementById('edit-cor_fundo').value = feed.cor_fundo;
          document.getElementById('edit-posicao').value = feed.posicao;
          document.getElementById('edit-ativo').checked = feed.ativo == 1;
-
          const modal = document.getElementById('edit-modal');
          modal.classList.add('visible');
       }
