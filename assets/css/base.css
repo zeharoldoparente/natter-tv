@@ -10,6 +10,10 @@
    --dark-color: #2c3e50;
 }
 
+html {
+   font-size: 14px;
+}
+
 * {
    margin: 0;
    padding: 0;

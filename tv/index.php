@@ -231,18 +231,13 @@ if (empty($conteudos)) {
 
          // Criar conteúdo HTML com separadores limpos
          let tickerHTML = '';
-         items.forEach((item, index) => {
+         items.forEach((item) => {
             // Adicionar apenas o texto da notícia, sem o nome do feed
             tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
-
-            // Adicionar separador entre notícias (exceto depois da última)
-            if (index < items.length - 1) {
-               tickerHTML += `<span class="rss-separator"> | </span>`;
-            }
          });
 
          // Duplicar o conteúdo para criar loop contínuo
-         tickerHTML = tickerHTML + `<span class="rss-separator"> | </span>` + tickerHTML;
+         tickerHTML = tickerHTML + tickerHTML;
 
          ticker.innerHTML = tickerHTML;
 

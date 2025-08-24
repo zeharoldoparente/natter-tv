@@ -7,6 +7,10 @@ function initializeUpload() {
    const fileInput = document.getElementById("arquivo");
    const uploadForm = document.getElementById("uploadForm");
 
+   if (!dropZone || !fileInput || !uploadForm) {
+      return;
+   }
+
    setupDragAndDrop(dropZone, fileInput);
    fileInput.addEventListener("change", handleFileSelect);
    uploadForm.addEventListener("submit", handleFormSubmit);

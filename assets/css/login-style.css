@@ -37,9 +37,6 @@ body::before {
    overflow: hidden;
    animation: fadeInUp 0.8s ease-out;
 }
-.login-container p {
-   margin-top: -30px;
-}
 
 .login-container::before {
    content: "";
@@ -187,7 +184,7 @@ body::before {
 .login-footer {
    text-align: center;
    margin-top: 30px;
-   padding-top: 20px;
+   padding-top: 5px;
    border-top: 1px solid #eee;
 }
 
