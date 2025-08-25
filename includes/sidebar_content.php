@@ -71,7 +71,7 @@ if ($usingDatabase && $conteudoAtivo) {
                $jpegSrc = SIDEBAR_WEB_PATH . basename($jpegPath);
                echo '<img src="' . $jpegSrc . '" alt="' . $alt . '" style="width: 100%; height: 100%; object-fit: cover;">';
             } else {
-               echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
+               echo '<img src="../assets/images/propaganda.png" alt="Propaganda" ';
             }
          } else {
             echo '<img src="' . $src . '" alt="' . $alt . '" style="width: 100%; height: 100%; object-fit: cover;">';
@@ -139,15 +139,15 @@ if (!$usingDatabase) {
                   imagedestroy($img);
                }
                $jpegSrc = (defined('SIDEBAR_WEB_PATH') ? SIDEBAR_WEB_PATH : "../sidebar/") . basename($jpegPath);
-               echo '<img src="' . $jpegSrc . '" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
+               echo '<img src="' . $jpegSrc . '" alt="Propaganda">';
             } else {
-               echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
+               echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
             }
          } else {
-            echo '<img src="' . $src . '" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
+            echo '<img src="' . $src . '" alt="Propaganda">';
          }
       }
    } else {
-      echo '<img src="../assets/images/propaganda.png" alt="Propaganda" style="width: 100%; height: 100%; object-fit: cover;">';
+      echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
    }
 }

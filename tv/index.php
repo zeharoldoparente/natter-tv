@@ -622,7 +622,6 @@ if (empty($conteudos)) {
          const img = document.createElement('img');
          img.src = '../assets/images/propaganda.png';
          img.alt = 'Propaganda';
-         img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
 
          if (videoElement.parentNode) {
             videoElement.parentNode.replaceChild(img, videoElement);
