@@ -74,6 +74,9 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
          <li><a href="upload.php"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
          <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
          <li><a href="sidebar.php"><i class="fas fa-bullhorn"></i> Conteúdo Lateral</a></li>
+         <?php if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'admin'): ?>
+            <li><a href="usuarios.php"><i class="fas fa-users"></i> Usuários</a></li>
+         <?php endif; ?>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>

@@ -1,16 +1,13 @@
 <?php
 session_start();
 include "../includes/db.php";
+include "../includes/functions.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
    $usuario = $_POST['usuario'];
-   $senha = md5($_POST['senha']);
+   $senha = $_POST['senha'];
 
-   $sql = "SELECT * FROM usuarios WHERE usuario='$usuario' AND senha='$senha'";
-   $res = $conn->query($sql);
-
-   if ($res->num_rows > 0) {
-      $_SESSION['logado'] = true;
+   if (fazerLogin($usuario, $senha)) {
       header("Location: dashboard.php");
       exit;
    } else {

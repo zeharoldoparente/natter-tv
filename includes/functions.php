@@ -505,3 +505,90 @@ function desativarTodosConteudosLaterais()
 
    return $result;
 }
+
+function listarUsuarios()
+{
+   global $conn;
+
+   $resultado = $conn->query("SELECT id, nome, usuario, nivel, ativo FROM usuarios WHERE usuario <> 'admin' ORDER BY nome");
+   $usuarios = [];
+
+   if ($resultado) {
+      while ($row = $resultado->fetch_assoc()) {
+         $usuarios[] = $row;
+      }
+   }
+
+   return $usuarios;
+}
+
+function buscarUsuarioPorId($id)
+{
+   global $conn;
+
+   $stmt = $conn->prepare("SELECT id, nome, usuario, nivel, ativo FROM usuarios WHERE id = ? AND usuario <> 'admin'");
+   $stmt->bind_param("i", $id);
+   $stmt->execute();
+   $result = $stmt->get_result();
+   $usuario = $result->fetch_assoc();
+   $stmt->close();
+
+   return $usuario;
+}
+
+function criarUsuario($nome, $usuario, $senha, $nivel)
+{
+   global $conn;
+
+   $senhaHash = md5($senha);
+   $stmt = $conn->prepare("INSERT INTO usuarios (nome, usuario, senha, nivel) VALUES (?, ?, ?, ?)");
+   $stmt->bind_param("ssss", $nome, $usuario, $senhaHash, $nivel);
+   $result = $stmt->execute();
+   $stmt->close();
+
+   if ($result) {
+      registrarLog('user_create', "Usuário {$usuario} criado");
+   }
+
+   return $result;
+}
+
+function atualizarUsuario($id, $nome, $usuario, $nivel, $senha = null)
+{
+   global $conn;
+
+   if (!empty($senha)) {
+      $senhaHash = md5($senha);
+      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ?, senha = ? WHERE id = ?");
+      $stmt->bind_param("ssssi", $nome, $usuario, $nivel, $senhaHash, $id);
+   } else {
+      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ? WHERE id = ?");
+      $stmt->bind_param("sssi", $nome, $usuario, $nivel, $id);
+   }
+
+   $result = $stmt->execute();
+   $stmt->close();
+
+   if ($result) {
+      registrarLog('user_update', "Usuário {$usuario} atualizado");
+   }
+
+   return $result;
+}
+
+function alterarStatusUsuario($id, $ativo)
+{
+   global $conn;
+
+   $stmt = $conn->prepare("UPDATE usuarios SET ativo = ? WHERE id = ? AND usuario <> 'admin'");
+   $stmt->bind_param("ii", $ativo, $id);
+   $result = $stmt->execute();
+   $stmt->close();
+
+   if ($result) {
+      $acao = $ativo ? 'user_activate' : 'user_deactivate';
+      registrarLog($acao, "Usuário ID {$id} " . ($ativo ? 'ativado' : 'desativado'));
+   }
+
+   return $result;
+}
