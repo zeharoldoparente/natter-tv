@@ -32,7 +32,7 @@ function verificarLogin()
 function fazerLogin($usuario, $senha)
 {
    global $conn;
-   $stmt = $conn->prepare("SELECT id, nome, usuario, senha, nivel, ativo FROM usuarios WHERE usuario = ? AND ativo = 1");
+   $stmt = $conn->prepare("SELECT id, nome, usuario, senha, nivel, ativo, codigo_canal FROM usuarios WHERE usuario = ? AND ativo = 1");
    $stmt->bind_param("s", $usuario);
    $stmt->execute();
    $result = $stmt->get_result();
@@ -46,6 +46,7 @@ function fazerLogin($usuario, $senha)
          $_SESSION['nome'] = $row['nome'];
          $_SESSION['usuario'] = $row['usuario'];
          $_SESSION['nivel'] = $row['nivel'];
+         $_SESSION['codigo_canal'] = $row['codigo_canal'];
          $_SESSION['ultimo_acesso'] = time();
          $updateLogin = $conn->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?");
          $updateLogin->bind_param("i", $row['id']);
@@ -510,7 +511,7 @@ function listarUsuarios()
 {
    global $conn;
 
-   $resultado = $conn->query("SELECT id, nome, usuario, nivel, ativo FROM usuarios WHERE usuario <> 'admin' ORDER BY nome");
+   $resultado = $conn->query("SELECT id, nome, usuario, nivel, ativo, codigo_canal FROM usuarios WHERE usuario <> 'admin' ORDER BY nome");
    $usuarios = [];
 
    if ($resultado) {
@@ -526,7 +527,7 @@ function buscarUsuarioPorId($id)
 {
    global $conn;
 
-   $stmt = $conn->prepare("SELECT id, nome, usuario, nivel, ativo FROM usuarios WHERE id = ? AND usuario <> 'admin'");
+   $stmt = $conn->prepare("SELECT id, nome, usuario, nivel, ativo, codigo_canal FROM usuarios WHERE id = ? AND usuario <> 'admin'");
    $stmt->bind_param("i", $id);
    $stmt->execute();
    $result = $stmt->get_result();
@@ -536,13 +537,13 @@ function buscarUsuarioPorId($id)
    return $usuario;
 }
 
-function criarUsuario($nome, $usuario, $senha, $nivel)
+function criarUsuario($nome, $usuario, $senha, $nivel, $codigo_canal = 'TODOS')
 {
    global $conn;
 
    $senhaHash = md5($senha);
-   $stmt = $conn->prepare("INSERT INTO usuarios (nome, usuario, senha, nivel) VALUES (?, ?, ?, ?)");
-   $stmt->bind_param("ssss", $nome, $usuario, $senhaHash, $nivel);
+   $stmt = $conn->prepare("INSERT INTO usuarios (nome, usuario, senha, nivel, codigo_canal) VALUES (?, ?, ?, ?, ?)");
+   $stmt->bind_param("sssss", $nome, $usuario, $senhaHash, $nivel, $codigo_canal);
    $result = $stmt->execute();
    $stmt->close();
 
@@ -553,17 +554,17 @@ function criarUsuario($nome, $usuario, $senha, $nivel)
    return $result;
 }
 
-function atualizarUsuario($id, $nome, $usuario, $nivel, $senha = null)
+function atualizarUsuario($id, $nome, $usuario, $nivel, $codigo_canal, $senha = null)
 {
    global $conn;
 
    if (!empty($senha)) {
       $senhaHash = md5($senha);
-      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ?, senha = ? WHERE id = ?");
-      $stmt->bind_param("ssssi", $nome, $usuario, $nivel, $senhaHash, $id);
+      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ?, codigo_canal = ?, senha = ? WHERE id = ?");
+      $stmt->bind_param("sssssi", $nome, $usuario, $nivel, $codigo_canal, $senhaHash, $id);
    } else {
-      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ? WHERE id = ?");
-      $stmt->bind_param("sssi", $nome, $usuario, $nivel, $id);
+      $stmt = $conn->prepare("UPDATE usuarios SET nome = ?, usuario = ?, nivel = ?, codigo_canal = ? WHERE id = ?");
+      $stmt->bind_param("ssssi", $nome, $usuario, $nivel, $codigo_canal, $id);
    }
 
    $result = $stmt->execute();

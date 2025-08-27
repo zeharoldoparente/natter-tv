@@ -35,8 +35,13 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
          unlink($arquivo_path);
       }
 
-      $stmt = $conn->prepare("DELETE FROM conteudos WHERE id = ?");
-      $stmt->bind_param("i", $id);
+      if ($isOperadorRestrito) {
+         $stmt = $conn->prepare("DELETE FROM conteudos WHERE id = ? AND codigo_canal = ?");
+         $stmt->bind_param("is", $id, $canal_usuario);
+      } else {
+         $stmt = $conn->prepare("DELETE FROM conteudos WHERE id = ?");
+         $stmt->bind_param("i", $id);
+      }
       $stmt->execute();
 
       $mensagem = "Arquivo excluído com sucesso!";
@@ -49,6 +54,11 @@ if (isset($_POST['atualizar_tv'])) {
 }
 
 $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
+$canal_usuario = $_SESSION['codigo_canal'] ?? 'TODOS';
+$isOperadorRestrito = (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && $canal_usuario !== 'TODOS');
+if ($isOperadorRestrito) {
+   $canal_filtro = $canal_usuario;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -122,29 +132,29 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             </div>
             <div class="card-body">
                <?php
-               $stats_conteudo = $conn->query("
-                  SELECT 
-                     COUNT(*) as total_arquivos,
-                     SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens,
-                     SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos,
-                     SUM(tamanho) as espaco_usado
-                  FROM conteudos 
-                  WHERE ativo = 1
-               ")->fetch_assoc();
-               $stats_rss = $conn->query("
-                  SELECT 
-                     COUNT(*) as total_feeds,
-                     SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos,
-                     COUNT(DISTINCT codigo_canal) as canais_rss
-                  FROM feeds_rss
-               ")->fetch_assoc();
+               if ($isOperadorRestrito) {
+                  $stmt = $conn->prepare("SELECT COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 AND codigo_canal = ?");
+                  $stmt->bind_param("s", $canal_usuario);
+                  $stmt->execute();
+                  $stats_conteudo = $stmt->get_result()->fetch_assoc();
+                  $stmt->close();
 
-               $stats_rss_items = $conn->query("
-                  SELECT COUNT(*) as total_items
-                  FROM cache_rss c
-                  INNER JOIN feeds_rss f ON c.feed_id = f.id
-                  WHERE f.ativo = 1
-               ")->fetch_assoc();
+                  $stmt = $conn->prepare("SELECT COUNT(*) as total_feeds, SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, COUNT(DISTINCT codigo_canal) as canais_rss FROM feeds_rss WHERE codigo_canal = ?");
+                  $stmt->bind_param("s", $canal_usuario);
+                  $stmt->execute();
+                  $stats_rss = $stmt->get_result()->fetch_assoc();
+                  $stmt->close();
+
+                  $stmt = $conn->prepare("SELECT COUNT(*) as total_items FROM cache_rss c INNER JOIN feeds_rss f ON c.feed_id = f.id WHERE f.ativo = 1 AND f.codigo_canal = ?");
+                  $stmt->bind_param("s", $canal_usuario);
+                  $stmt->execute();
+                  $stats_rss_items = $stmt->get_result()->fetch_assoc();
+                  $stmt->close();
+               } else {
+                  $stats_conteudo = $conn->query("SELECT COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1")->fetch_assoc();
+                  $stats_rss = $conn->query("SELECT COUNT(*) as total_feeds, SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, COUNT(DISTINCT codigo_canal) as canais_rss FROM feeds_rss")->fetch_assoc();
+                  $stats_rss_items = $conn->query("SELECT COUNT(*) as total_items FROM cache_rss c INNER JOIN feeds_rss f ON c.feed_id = f.id WHERE f.ativo = 1")->fetch_assoc();
+               }
                ?>
 
                <div class="stats-overview">
@@ -197,27 +207,29 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             </div>
             <div class="card-body">
                <?php
-               $stats_query = $conn->query("
-                  SELECT 
-                     codigo_canal,
-                     COUNT(*) as total_arquivos,
-                     SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens,
-                     SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos,
-                     SUM(tamanho) as espaco_usado
-                  FROM conteudos 
-                  WHERE ativo = 1
-                  GROUP BY codigo_canal
-                  ORDER BY codigo_canal
-               ");
-               $rss_por_canal = [];
-               $rss_query = $conn->query("
-                  SELECT codigo_canal, COUNT(*) as total_feeds
-                  FROM feeds_rss 
-                  WHERE ativo = 1
-                  GROUP BY codigo_canal
-               ");
-               while ($row = $rss_query->fetch_assoc()) {
-                  $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
+               if ($isOperadorRestrito) {
+                  $stmt = $conn->prepare("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 AND codigo_canal = ? GROUP BY codigo_canal ORDER BY codigo_canal");
+                  $stmt->bind_param("s", $canal_usuario);
+                  $stmt->execute();
+                  $stats_query = $stmt->get_result();
+                  $stmt->close();
+
+                  $rss_por_canal = [];
+                  $stmt2 = $conn->prepare("SELECT codigo_canal, COUNT(*) as total_feeds FROM feeds_rss WHERE ativo = 1 AND codigo_canal = ? GROUP BY codigo_canal");
+                  $stmt2->bind_param("s", $canal_usuario);
+                  $stmt2->execute();
+                  $rss_query = $stmt2->get_result();
+                  while ($row = $rss_query->fetch_assoc()) {
+                     $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
+                  }
+                  $stmt2->close();
+               } else {
+                  $stats_query = $conn->query("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
+                  $rss_por_canal = [];
+                  $rss_query = $conn->query("SELECT codigo_canal, COUNT(*) as total_feeds FROM feeds_rss WHERE ativo = 1 GROUP BY codigo_canal");
+                  while ($row = $rss_query->fetch_assoc()) {
+                     $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
+                  }
                }
                ?>
 
@@ -272,7 +284,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                         <label for="canal_filter">Filtrar por Canal:</label>
                         <input type="text" name="canal" id="canal_filter"
                            placeholder="Digite o código do canal"
-                           value="<?php echo htmlspecialchars($canal_filtro); ?>">
+                           value="<?php echo htmlspecialchars($canal_filtro); ?>" <?php echo $isOperadorRestrito ? 'readonly' : ''; ?>>
                         <button type="submit" class="btn btn-sm btn-primary">
                            <i class="fas fa-search"></i> Filtrar
                         </button>

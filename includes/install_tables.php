@@ -11,11 +11,13 @@ try {
         usuario VARCHAR(50) UNIQUE NOT NULL,
         senha VARCHAR(255) NOT NULL,
         email VARCHAR(100),
+        codigo_canal VARCHAR(10) DEFAULT 'TODOS',
         nivel ENUM('admin', 'operador') DEFAULT 'operador',
         ativo TINYINT(1) DEFAULT 1,
         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         ultimo_login TIMESTAMP NULL,
         INDEX idx_usuario (usuario),
+        INDEX idx_canal_usuario (codigo_canal),
         INDEX idx_ativo (ativo)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8";
 
@@ -81,8 +83,8 @@ try {
    if (!$adminExists) {
       $senhaAdmin = md5('admin123');
       $sqlAdmin = "
-        INSERT INTO usuarios (nome, usuario, senha, email, nivel) 
-        VALUES ('Administrador', 'admin', '$senhaAdmin', 'admin@empresa.com', 'admin')";
+INSERT INTO usuarios (nome, usuario, senha, email, nivel, codigo_canal)
+        VALUES ('Administrador', 'admin', '$senhaAdmin', 'admin@empresa.com', 'admin', 'TODOS')";
 
       $conn->query($sqlAdmin);
    }

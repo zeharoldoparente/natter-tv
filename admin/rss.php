@@ -20,6 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $nome = sanitizarEntrada($_POST['nome']);
          $url_feed = sanitizarEntrada($_POST['url_feed'], 'url');
          $codigo_canal = strtoupper(sanitizarEntrada($_POST['codigo_canal']));
+         if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+            $codigo_canal = $_SESSION['codigo_canal'];
+         }
          $velocidade = (int)$_POST['velocidade'];
          $cor_texto = sanitizarEntrada($_POST['cor_texto']);
          $cor_fundo = sanitizarEntrada($_POST['cor_fundo']);
@@ -66,6 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $nome = sanitizarEntrada($_POST['nome']);
          $url_feed = sanitizarEntrada($_POST['url_feed'], 'url');
          $codigo_canal = strtoupper(sanitizarEntrada($_POST['codigo_canal']));
+         if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+            $codigo_canal = $_SESSION['codigo_canal'];
+         }
          $velocidade = (int)$_POST['velocidade'];
          $cor_texto = sanitizarEntrada($_POST['cor_texto']);
          $cor_fundo = sanitizarEntrada($_POST['cor_fundo']);
@@ -109,8 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $id = (int)$_GET['delete'];
 
-   $stmt = $conn->prepare("DELETE FROM feeds_rss WHERE id = ?");
-   $stmt->bind_param("i", $id);
+   if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+      $stmt = $conn->prepare("DELETE FROM feeds_rss WHERE id = ? AND codigo_canal = ?");
+      $stmt->bind_param("is", $id, $_SESSION['codigo_canal']);
+   } else {
+      $stmt = $conn->prepare("DELETE FROM feeds_rss WHERE id = ?");
+      $stmt->bind_param("i", $id);
+   }
 
    if ($stmt->execute()) {
       $mensagem = "Feed RSS excluído com sucesso!";
@@ -119,25 +130,32 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $stmt->close();
 }
 $feeds = [];
-$res = $conn->query("
-    SELECT f.*, COUNT(c.id) as total_itens,
-           MAX(c.data_publicacao) as ultima_atualizacao
-    FROM feeds_rss f 
-    LEFT JOIN cache_rss c ON f.id = c.feed_id 
-    GROUP BY f.id 
-    ORDER BY f.codigo_canal, f.nome
-");
+if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+   $stmt = $conn->prepare("SELECT f.*, COUNT(c.id) as total_itens, MAX(c.data_publicacao) as ultima_atualizacao FROM feeds_rss f LEFT JOIN cache_rss c ON f.id = c.feed_id WHERE f.codigo_canal = ? GROUP BY f.id ORDER BY f.codigo_canal, f.nome");
+   $stmt->bind_param("s", $_SESSION['codigo_canal']);
+   $stmt->execute();
+   $res = $stmt->get_result();
+} else {
+   $res = $conn->query("SELECT f.*, COUNT(c.id) as total_itens, MAX(c.data_publicacao) as ultima_atualizacao FROM feeds_rss f LEFT JOIN cache_rss c ON f.id = c.feed_id GROUP BY f.id ORDER BY f.codigo_canal, f.nome");
+}
 
 if ($res) {
    while ($row = $res->fetch_assoc()) {
       $feeds[] = $row;
    }
 }
+if (isset($stmt)) {
+   $stmt->close();
+}
 $canais = [];
-$res = $conn->query("SELECT DISTINCT codigo_canal FROM conteudos WHERE ativo = 1 ORDER BY codigo_canal");
-if ($res) {
-   while ($row = $res->fetch_assoc()) {
-      $canais[] = $row['codigo_canal'];
+if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+   $canais[] = $_SESSION['codigo_canal'];
+} else {
+   $res = $conn->query("SELECT DISTINCT codigo_canal FROM conteudos WHERE ativo = 1 ORDER BY codigo_canal");
+   if ($res) {
+      while ($row = $res->fetch_assoc()) {
+         $canais[] = $row['codigo_canal'];
+      }
    }
 }
 ?>
@@ -238,14 +256,18 @@ if ($res) {
                         <label for="codigo_canal">
                            <i class="fas fa-tv"></i> Canal
                         </label>
-                        <select name="codigo_canal" id="codigo_canal">
-                           <option value="TODOS">Todos os Canais</option>
-                           <?php foreach ($canais as $canal): ?>
-                              <option value="<?php echo htmlspecialchars($canal); ?>">
-                                 Canal <?php echo htmlspecialchars($canal); ?>
-                              </option>
-                           <?php endforeach; ?>
-                        </select>
+                        <?php if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS'): ?>
+                           <input type="text" name="codigo_canal" id="codigo_canal" value="<?php echo htmlspecialchars($_SESSION['codigo_canal']); ?>" readonly>
+                        <?php else: ?>
+                           <select name="codigo_canal" id="codigo_canal">
+                              <option value="TODOS">Todos os Canais</option>
+                              <?php foreach ($canais as $canal): ?>
+                                 <option value="<?php echo htmlspecialchars($canal); ?>">
+                                    Canal <?php echo htmlspecialchars($canal); ?>
+                                 </option>
+                              <?php endforeach; ?>
+                           </select>
+                        <?php endif; ?>
                      </div>
                      <div class="form-group">
                         <label for="velocidade">
@@ -386,12 +408,16 @@ if ($res) {
             <div class="form-row">
                <div class="form-group">
                   <label for="edit-codigo_canal"><i class="fas fa-tv"></i> Canal</label>
-                  <select name="codigo_canal" id="edit-codigo_canal">
-                     <option value="TODOS">Todos os Canais</option>
-                     <?php foreach ($canais as $canal): ?>
-                        <option value="<?php echo htmlspecialchars($canal); ?>">Canal <?php echo htmlspecialchars($canal); ?></option>
-                     <?php endforeach; ?>
-                  </select>
+                  <?php if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS'): ?>
+                     <input type="text" name="codigo_canal" id="edit-codigo_canal" value="<?php echo htmlspecialchars($_SESSION['codigo_canal']); ?>" readonly>
+                  <?php else: ?>
+                     <select name="codigo_canal" id="edit-codigo_canal">
+                        <option value="TODOS">Todos os Canais</option>
+                        <?php foreach ($canais as $canal): ?>
+                           <option value="<?php echo htmlspecialchars($canal); ?>">Canal <?php echo htmlspecialchars($canal); ?></option>
+                        <?php endforeach; ?>
+                     </select>
+                  <?php endif; ?>
                </div>
                <div class="form-group">
                   <label for="edit-velocidade"><i class="fas fa-tachometer-alt"></i> Velocidade do Scroll (px/s)</label>
@@ -463,6 +489,13 @@ if ($res) {
          const cards = document.querySelectorAll('.card');
          cards.forEach((card, index) => {
             card.style.animationDelay = `${index * 0.1}s`;
+         });
+
+         const canalInputs = document.querySelectorAll('#codigo_canal, #edit-codigo_canal');
+         canalInputs.forEach(input => {
+            input.addEventListener('input', function(e) {
+               this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
          });
       });
    </script>

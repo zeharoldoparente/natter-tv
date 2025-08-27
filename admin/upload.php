@@ -20,6 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
       $duracao = (int)$_POST['duracao'] ?? 5;
       $duracao = max(1, min(300, $duracao));
       $codigo_canal = sanitizarEntrada($_POST['codigo_canal'] ?? '0000');
+      if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+         $codigo_canal = $_SESSION['codigo_canal'];
+      }
 
       if (empty($codigo_canal)) {
          $codigo_canal = '0000';
@@ -37,23 +40,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
 
 $stats = [];
 try {
-   $statsQuery = $conn->query("
-        SELECT 
-            codigo_canal,
-            COUNT(*) as total_arquivos,
-            SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens,
-            SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos,
-            SUM(tamanho) as espaco_usado
-        FROM conteudos 
-        WHERE ativo = 1
-        GROUP BY codigo_canal
-        ORDER BY codigo_canal
-    ");
+   if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
+      $stmt = $conn->prepare("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 AND codigo_canal = ? GROUP BY codigo_canal ORDER BY codigo_canal");
+      $stmt->bind_param("s", $_SESSION['codigo_canal']);
+      $stmt->execute();
+      $statsQuery = $stmt->get_result();
+   } else {
+      $statsQuery = $conn->query("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
+   }
 
    if ($statsQuery) {
       while ($row = $statsQuery->fetch_assoc()) {
          $stats[] = $row;
       }
+   }
+   if (isset($stmt)) {
+      $stmt->close();
    }
 } catch (Exception $e) {
 }
@@ -190,16 +192,19 @@ try {
             <div class="card-body">
                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
-
                   <div class="form-group">
                      <label for="codigo_canal">
                         <i class="fas fa-tv"></i>
                         Código do Canal
                      </label>
-                     <input type="text" name="codigo_canal" id="codigo_canal"
-                        placeholder="Ex: 1234" maxlength="10" required
-                        pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
-                     <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
+                     <?php if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS'): ?>
+                        <input type="text" name="codigo_canal" id="codigo_canal" value="<?php echo htmlspecialchars($_SESSION['codigo_canal']); ?>" readonly>
+                     <?php else: ?>
+                        <input type="text" name="codigo_canal" id="codigo_canal"
+                           placeholder="Ex: 1234" maxlength="10" required
+                           pattern="[A-Za-z0-9]{1,10}" title="Use apenas letras e números">
+                        <small>Digite um código para identificar o canal (ex: 1234, LOJA1, TV01, etc.)</small>
+                     <?php endif; ?>
                   </div>
 
                   <div class="drop-zone" id="dropZone">

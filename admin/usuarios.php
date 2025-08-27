@@ -31,8 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $usuario = sanitizarEntrada($_POST['usuario']);
          $senha = $_POST['senha'];
          $nivel = $_POST['nivel'] === 'admin' ? 'admin' : 'operador';
-
-         if (criarUsuario($nome, $usuario, $senha, $nivel)) {
+         $codigo_canal = strtoupper(sanitizarEntrada($_POST['codigo_canal'] ?? 'TODOS'));
+         if ($nivel === 'admin') {
+            $codigo_canal = 'TODOS';
+         }
+         if (criarUsuario($nome, $usuario, $senha, $nivel, $codigo_canal)) {
             $mensagem = 'Usuário criado com sucesso!';
          } else {
             $erro = 'Erro ao criar usuário.';
@@ -44,7 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          $nivel = $_POST['nivel'] === 'admin' ? 'admin' : 'operador';
          $senha = trim($_POST['senha']);
 
-         if (atualizarUsuario($id, $nome, $usuario, $nivel, $senha ? $senha : null)) {
+         $codigo_canal = strtoupper(sanitizarEntrada($_POST['codigo_canal'] ?? 'TODOS'));
+         if ($nivel === 'admin') {
+            $codigo_canal = 'TODOS';
+         }
+
+         if (atualizarUsuario($id, $nome, $usuario, $nivel, $codigo_canal, $senha ? $senha : null)) {
             $mensagem = 'Usuário atualizado com sucesso!';
          } else {
             $erro = 'Erro ao atualizar usuário.';
@@ -128,6 +136,7 @@ $usuarios = listarUsuarios();
                            <th>Nome</th>
                            <th>Usuário</th>
                            <th>Nível</th>
+                           <th>Canal</th>
                            <th>Status</th>
                            <th>Ações</th>
                         </tr>
@@ -138,6 +147,7 @@ $usuarios = listarUsuarios();
                               <td><?php echo htmlspecialchars($u['nome']); ?></td>
                               <td><?php echo htmlspecialchars($u['usuario']); ?></td>
                               <td><?php echo htmlspecialchars(ucfirst($u['nivel'])); ?></td>
+                              <td><?php echo htmlspecialchars($u['codigo_canal']); ?></td>
                               <td><?php echo $u['ativo'] ? 'Ativo' : 'Inativo'; ?></td>
                               <td>
                                  <a href="usuarios.php?editar=<?php echo $u['id']; ?>" class="btn btn-sm"><i class="fas fa-edit"></i> Editar</a>
@@ -195,7 +205,10 @@ $usuarios = listarUsuarios();
                         <option value="admin" <?php echo (isset($usuarioEditar['nivel']) && $usuarioEditar['nivel'] === 'admin') ? 'selected' : ''; ?>>Administrador</option>
                      </select>
                   </div>
-
+                  <div class="form-group">
+                     <label for="codigo_canal"><i class="fas fa-tv"></i> Canal</label>
+                     <input type="text" name="codigo_canal" id="codigo_canal" maxlength="10" required pattern="[A-Za-z0-9]{1,10}" value="<?php echo $usuarioEditar['codigo_canal'] ?? 'TODOS'; ?>">
+                  </div>
                   <button type="submit" class="btn btn-primary">
                      <i class="fas fa-save"></i> <?php echo $editando ? 'Salvar Alterações' : 'Criar Usuário'; ?>
                   </button>
@@ -209,6 +222,16 @@ $usuarios = listarUsuarios();
          </div>
       </div>
    </main>
+   <script>
+      document.addEventListener('DOMContentLoaded', function() {
+         const canalInput = document.getElementById('codigo_canal');
+         if (canalInput) {
+            canalInput.addEventListener('input', function(e) {
+               this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+         }
+      });
+   </script>
 </body>
 
 </html>
