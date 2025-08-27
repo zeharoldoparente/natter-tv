@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Login - NatterTV </title>
+   <title>Login - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/login-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
    <div class="login-container">
       <div class="login-header">
-         <img class="img-sync" src="../assets/images/TV Corporativa - Natter.png" alt="">
+         <img src="../assets/images/TV Corporativa - Natter.png" alt="NatterTV">
          <p>Sistema de Gerenciamento de Conteúdo</p>
       </div>
 
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       <div class="login-footer">
          <p>&copy; 2024 NatterTV - Todos os direitos reservados</p>
-         <div class="version">Versão 1.0</div>
+         <div class="version">Versão 2.0</div>
       </div>
    </div>
 
@@ -84,20 +84,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             input.addEventListener('blur', function() {
                this.parentElement.style.transform = 'translateY(0)';
             });
-         });
 
-         form.addEventListener('submit', function() {
-            loginBtn.classList.add('loading');
-            loginBtn.innerHTML = '<i class="fas fa-spinner"></i> Entrando...';
-            loginBtn.disabled = true;
-         });
-
-         inputs.forEach(input => {
             input.addEventListener('keypress', function(e) {
                if (e.key === 'Enter') {
                   form.submit();
                }
             });
+         });
+
+         form.addEventListener('submit', function() {
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            loginBtn.disabled = true;
          });
       });
    </script>

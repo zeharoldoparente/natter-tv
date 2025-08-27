@@ -64,7 +64,7 @@ try {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Upload de Conteúdo Principal - NatterTV</title>
+   <title>Upload de Conteúdo - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -74,14 +74,14 @@ try {
 <body>
    <nav class="sidebar">
       <div class="sidebar-header">
-         <img class="img-sync" src="../assets/images/Natter Logo.PNG" alt="">
+         <img src="../assets/images/Natter Logo.PNG" alt="NatterTV">
          <h2>NatterTV</h2>
       </div>
       <ul class="sidebar-menu">
-         <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
-         <li class="active"><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+         <li class="active"><a href="upload.php"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
          <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
-         <li><a href="sidebar.php"><i class="fas fa-th-large"></i> Conteúdo Lateral</a></li>
+         <li><a href="sidebar.php"><i class="fas fa-bullhorn"></i> Conteúdo Lateral</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
@@ -89,7 +89,7 @@ try {
 
    <main class="main-content">
       <header class="topbar">
-         <h1><i class="fas fa-upload"></i> Upload de Conteúdo Principal</h1>
+         <h1><i class="fas fa-cloud-upload-alt"></i> Upload de Conteúdo Principal</h1>
          <div class="user-info">
             <span>Bem-vindo, <?php echo $_SESSION['nome'] ?? 'Admin'; ?>!</span>
          </div>
@@ -107,71 +107,71 @@ try {
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
-         <?php if (!empty($stats)): ?>
-            <div class="card">
-               <div class="card-header">
-                  <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
-               </div>
-               <div class="card-body">
-                  <div class="instructions">
-                     <div class="instruction-item">
-                        <i class="fas fa-tv text-success"></i>
-                        <div>
-                           <h5>Códigos de Canal</h5>
-                           <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
-                        </div>
-                     </div>
 
-                     <div class="instruction-item">
-                        <i class="fas fa-image text-info"></i>
-                        <div>
-                           <h5>Imagens</h5>
-                           <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
-                        </div>
+         <div class="card">
+            <div class="card-header">
+               <h3><i class="fas fa-info-circle"></i> Instruções de Uso</h3>
+            </div>
+            <div class="card-body">
+               <div class="instructions">
+                  <div class="instruction-item">
+                     <i class="fas fa-tv"></i>
+                     <div>
+                        <h5>Códigos de Canal</h5>
+                        <p>Cada conteúdo é vinculado a um código de canal. Use códigos como: 1234, LOJA1, TV01, etc.</p>
                      </div>
+                  </div>
 
-                     <div class="instruction-item">
-                        <i class="fas fa-video text-warning"></i>
-                        <div>
-                           <h5>Vídeos</h5>
-                           <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
-                        </div>
+                  <div class="instruction-item">
+                     <i class="fas fa-image"></i>
+                     <div>
+                        <h5>Imagens</h5>
+                        <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
                      </div>
+                  </div>
 
-                     <div class="instruction-item">
-                        <i class="fas fa-desktop text-primary"></i>
-                        <div>
-                           <h5>Visualização na TV</h5>
-                           <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
-                        </div>
+                  <div class="instruction-item">
+                     <i class="fas fa-video"></i>
+                     <div>
+                        <h5>Vídeos</h5>
+                        <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
                      </div>
+                  </div>
 
-                     <div class="instruction-item">
-                        <i class="fas fa-th-large text-warning"></i>
-                        <div>
-                           <h5>Conteúdo Lateral</h5>
-                           <p>Para gerenciar propagandas e conteúdo da sidebar, use a página <a href="sidebar.php">Conteúdo Lateral</a></p>
-                        </div>
+                  <div class="instruction-item">
+                     <i class="fas fa-desktop"></i>
+                     <div>
+                        <h5>Visualização na TV</h5>
+                        <p>Acesse a TV e digite o código do canal para ver apenas o conteúdo daquele canal</p>
+                     </div>
+                  </div>
+
+                  <div class="instruction-item">
+                     <i class="fas fa-bullhorn"></i>
+                     <div>
+                        <h5>Conteúdo Lateral</h5>
+                        <p>Para gerenciar propagandas e conteúdo da sidebar, use a página <a href="sidebar.php">Conteúdo Lateral</a></p>
                      </div>
                   </div>
                </div>
             </div>
+         </div>
+
+         <?php if (!empty($stats)): ?>
             <div class="card">
                <div class="card-header">
                   <h3><i class="fas fa-chart-bar"></i> Estatísticas por Canal</h3>
                </div>
                <div class="card-body">
-                  <div class="channels-stats">
+                  <div class="stats-overview">
                      <?php foreach ($stats as $stat): ?>
-                        <div class="channel-stat">
-                           <div class="channel-header">
-                              <h4>Canal: <?php echo $stat['codigo_canal']; ?></h4>
+                        <div class="stat-card">
+                           <div class="stat-icon">
+                              <i class="fas fa-tv"></i>
                            </div>
-                           <div class="channel-info">
-                              <span><i class="fas fa-file"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
-                              <span><i class="fas fa-image"></i> <?php echo $stat['total_imagens']; ?> imagens</span>
-                              <span><i class="fas fa-video"></i> <?php echo $stat['total_videos']; ?> vídeos</span>
-                              <span><i class="fas fa-hdd"></i> <?php echo formatFileSize($stat['espaco_usado']); ?></span>
+                           <div class="stat-info">
+                              <h3><?php echo $stat['codigo_canal']; ?></h3>
+                              <p><?php echo $stat['total_arquivos']; ?> arquivos • <?php echo formatFileSize($stat['espaco_usado']); ?></p>
                            </div>
                         </div>
                      <?php endforeach; ?>
@@ -179,6 +179,7 @@ try {
                </div>
             </div>
          <?php endif; ?>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo</h3>
@@ -186,6 +187,7 @@ try {
             <div class="card-body">
                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
+
                   <div class="form-group">
                      <label for="codigo_canal">
                         <i class="fas fa-tv"></i>
@@ -263,83 +265,12 @@ try {
                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             });
          }
-         const fileInput = document.getElementById('arquivo');
-         if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-               console.log('Arquivo selecionado no upload principal:', e.target.files[0]);
-            });
-         }
+
+         const cards = document.querySelectorAll('.card');
+         cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+         });
       });
-
-      function showAlert(message, type = 'info') {
-         console.log('Mostrando alert:', message, type);
-         const existingAlerts = document.querySelectorAll('.alert-dynamic');
-         existingAlerts.forEach((alert) => alert.remove());
-
-         const alert = document.createElement('div');
-         alert.className = `alert alert-${type} alert-dynamic`;
-         alert.style.cssText = `
-         position: relative;
-         margin-bottom: 20px;
-         animation: slideDown 0.3s ease-out;
-         padding: 15px;
-         border-radius: 6px;
-         display: flex;
-         align-items: center;
-      `;
-
-         const icon = type === 'success' ? 'check-circle' :
-            type === 'error' ? 'exclamation-circle' : 'info-circle';
-
-         const colors = {
-            'success': {
-               bg: '#d4edda',
-               color: '#155724',
-               border: '#c3e6cb'
-            },
-            'error': {
-               bg: '#f8d7da',
-               color: '#721c24',
-               border: '#f5c6cb'
-            },
-            'info': {
-               bg: '#d1ecf1',
-               color: '#0c5460',
-               border: '#bee5eb'
-            }
-         };
-
-         const colorSet = colors[type] || colors.info;
-         alert.style.backgroundColor = colorSet.bg;
-         alert.style.color = colorSet.color;
-         alert.style.border = `1px solid ${colorSet.border}`;
-
-         alert.innerHTML = `
-         <i class="fas fa-${icon}" style="margin-right: 10px; font-size: 1.2rem;"></i> 
-         ${message}
-         <button type="button" class="alert-close" onclick="this.parentElement.remove()" 
-                 style="position: absolute; top: 15px; right: 15px; background: none; border: none; 
-                        color: inherit; opacity: 0.7; cursor: pointer; font-size: 1.2rem;">
-            <i class="fas fa-times"></i>
-         </button>
-      `;
-
-         const content = document.querySelector('.content');
-         if (content) {
-            content.insertBefore(alert, content.firstChild);
-            alert.scrollIntoView({
-               behavior: 'smooth',
-               block: 'nearest'
-            });
-         }
-         setTimeout(() => {
-            if (alert.parentNode) {
-               alert.style.opacity = '0';
-               alert.style.transform = 'translateY(-20px)';
-               setTimeout(() => alert.remove(), 300);
-            }
-         }, 5000);
-      }
    </script>
 </body>
 

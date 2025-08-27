@@ -31,6 +31,7 @@ while ($row = $result->fetch_assoc()) {
    $conteudos[] = $row;
 }
 $stmt->close();
+
 if (empty($conteudos)) {
    $conteudos = [
       [
@@ -50,49 +51,64 @@ if (empty($conteudos)) {
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>TV Corporativa - Canal <?php echo htmlspecialchars($codigo_canal); ?></title>
+   <title>NatterTV - Canal <?php echo htmlspecialchars($codigo_canal); ?></title>
    <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/tv-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
    <link rel="shortcut icon" href="../assets/images/favicon.png" type="image/x-icon">
+   <meta name="theme-color" content="#166353">
+   <meta name="description" content="NatterTV - Sistema Corporativo de TV Digital">
 </head>
 
 <body>
    <div id="conteudo-principal">
       <div id="media-container"></div>
+
+      <!-- RSS Topo -->
       <div id="rss-topo" class="rss-container topo hidden">
          <div class="rss-ticker" id="rss-ticker-topo"></div>
       </div>
+
+      <!-- Sidebar Direita -->
       <div id="sidebar-direita">
          <div class="propaganda">
             <?php include "../includes/sidebar_content.php"; ?>
          </div>
+
          <div class="info-branca">
             <div class="logo-tv">
-               <img src="../assets/images/TV Corporativa - Natter.png" alt="Logo NatterTV">
+               <img src="../assets/images/TV Corporativa - Natter.png" alt="NatterTV" loading="lazy">
                <div class="canal-nome">Canal <?php echo htmlspecialchars($codigo_canal); ?></div>
             </div>
+
             <div class="data-hora-container">
-               <div id="horario"></div>
-               <div id="data"></div>
+               <div id="horario">--:--:--</div>
+               <div id="data">Carregando...</div>
             </div>
          </div>
       </div>
+
+      <!-- Rodapé com RSS -->
       <div id="rodape-bar">
          <div class="rodape-logo">
-            <img src="../assets/images/tt Logo.png" alt="Logo">
+            <img src="../assets/images/tt Logo.png" alt="Logo" loading="lazy">
          </div>
          <div id="rss-rodape" class="rss-container rodape hidden">
             <div class="rss-ticker" id="rss-ticker-rodape"></div>
          </div>
       </div>
 
+      <!-- Loading -->
       <div id="loading" class="hidden">
          <i class="fas fa-spinner fa-spin"></i>
          <p>Carregando conteúdo...</p>
       </div>
+
+      <!-- Connection Indicator -->
+      <div class="connection-indicator" id="connectionIndicator"></div>
    </div>
 
+   <!-- Tela Sem Conteúdo -->
    <div id="tela-sem-conteudo" class="hidden">
       <div class="sem-conteudo">
          <i class="fas fa-tv"></i>
@@ -104,7 +120,10 @@ if (empty($conteudos)) {
             <span></span>
          </div>
          <div class="canal-info-footer">
-            <p><small>Pressione 'C' para trocar de canal</small></p>
+            <p>
+               <i class="fas fa-keyboard"></i>
+               Pressione 'C' para trocar de canal • 'R' para recarregar
+            </p>
          </div>
       </div>
    </div>
@@ -116,8 +135,10 @@ if (empty($conteudos)) {
          showOverlay: false,
          fadeTransition: true,
          debug: false,
-         canalAtual: '<?php echo $codigo_canal; ?>'
+         canalAtual: '<?php echo $codigo_canal; ?>',
+         enableAnimations: true
       };
+
       let conteudos = <?php echo json_encode($conteudos); ?>;
       let currentIndex = 0;
       let isPlaying = false;
@@ -129,38 +150,55 @@ if (empty($conteudos)) {
          topo: []
       };
       let isFirstLoad = true;
+      let connectionStatus = 'online';
+
       document.addEventListener('DOMContentLoaded', function() {
          initializeTV();
       });
 
       function initializeTV() {
-         log('Inicializando TV Corporativa - Canal: ' + CONFIG.canalAtual);
+         log('🚀 Inicializando NatterTV - Canal: ' + CONFIG.canalAtual);
+
+         // Configurações iniciais
          requestFullscreenSilent();
          updateDateTime();
          setInterval(updateDateTime, 1000);
+
+         // Sistema RSS
          initializeRSS();
+
+         // Verificar conteúdo
          if (conteudos.length === 0 || conteudos[0].id === 0) {
             showNoContentScreen();
          } else {
             startPlayback();
          }
 
+         // Configurar atualizações após carregamento inicial
          setTimeout(() => {
             setupUpdateChecker();
             isFirstLoad = false;
+            updateConnectionStatus('online');
          }, 5000);
 
+         // Controles do teclado
          setupKeyboardControls();
 
-         log('TV inicializada com sucesso para o canal ' + CONFIG.canalAtual);
+         // Inicializar vídeos da sidebar
+         setTimeout(initializeSidebarVideo, 1000);
+
+         log('✅ NatterTV inicializada com sucesso para o canal ' + CONFIG.canalAtual);
       }
 
       function requestFullscreenSilent() {
+         // Tentar fullscreen automático
          if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen().catch(() => {
-               log('Fullscreen automático não permitido pelo navegador');
+               log('📱 Fullscreen automático não permitido pelo navegador');
             });
          }
+
+         // Fallback para clique
          document.addEventListener('click', function(e) {
             if (!document.fullscreenElement) {
                document.documentElement.requestFullscreen().catch(() => {});
@@ -176,11 +214,11 @@ if (empty($conteudos)) {
             clearInterval(rssTimer);
          }
          rssTimer = setInterval(updateRSSContent, CONFIG.rssUpdateInterval);
-         log('Sistema RSS inicializado');
+         log('📡 Sistema RSS inicializado');
       }
 
       function updateRSSContent() {
-         log('Atualizando conteúdo RSS para canal ' + CONFIG.canalAtual + '...');
+         log('🔄 Atualizando conteúdo RSS para canal ' + CONFIG.canalAtual + '...');
 
          fetch(`get_rss.php?canal=${CONFIG.canalAtual}`, {
                cache: 'no-cache',
@@ -191,20 +229,22 @@ if (empty($conteudos)) {
             .then(response => response.json())
             .then(data => {
                if (data.error) {
-                  log('Erro na API RSS: ' + data.message);
+                  log('❌ Erro na API RSS: ' + data.message);
                   return;
                }
 
                rssData = data;
                setupRSSTickers();
-               log(`RSS atualizado: ${data.total_itens} itens (${data.rodape.length} rodapé, ${data.topo.length} topo)`);
+               log(`📰 RSS atualizado: ${data.total_itens} itens (${data.rodape.length} rodapé, ${data.topo.length} topo)`);
             })
             .catch(error => {
-               log('Erro ao buscar RSS: ' + error.message);
+               log('🚨 Erro ao buscar RSS: ' + error.message);
+               updateConnectionStatus('offline');
             });
       }
 
       function setupRSSTickers() {
+         // RSS Rodapé
          if (rssData.rodape && rssData.rodape.length > 0) {
             const rodapeContainer = document.getElementById('rss-rodape');
             const rodapeTicker = document.getElementById('rss-ticker-rodape');
@@ -213,6 +253,8 @@ if (empty($conteudos)) {
          } else {
             document.getElementById('rss-rodape').classList.add('hidden');
          }
+
+         // RSS Topo
          if (rssData.topo && rssData.topo.length > 0) {
             const topoContainer = document.getElementById('rss-topo');
             const topoTicker = document.getElementById('rss-ticker-topo');
@@ -227,16 +269,28 @@ if (empty($conteudos)) {
          if (!items || items.length === 0) return;
 
          const config = items[0].configuracao;
-         container.style.backgroundColor = config.cor_fundo;
+
+         // Aplicar estilos do feed
+         container.style.background = `linear-gradient(135deg, ${config.cor_fundo}ee 0%, ${config.cor_fundo}dd 100%)`;
          container.style.color = config.cor_texto;
+
+         // Gerar HTML do ticker
          let tickerHTML = '';
          items.forEach((item) => {
-            tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
+            tickerHTML += `<span class="rss-item" title="${escapeHtml(item.titulo)}">
+               <span class="rss-feed-label">${escapeHtml(item.feed_nome)}</span>
+               ${escapeHtml(item.texto)}
+            </span>`;
          });
+
+         // Duplicar para scroll infinito
          ticker.innerHTML = tickerHTML + tickerHTML;
+
+         // Reset animation
          ticker.style.animation = 'none';
          ticker.style.transform = 'translateX(0)';
 
+         // Configurar animação após um frame
          setTimeout(() => {
             const fullWidth = ticker.scrollWidth;
             const contentWidth = fullWidth / 2;
@@ -251,24 +305,9 @@ if (empty($conteudos)) {
             const velocidade = Math.max(config.velocidade_scroll, 10);
             const duration = contentWidth / velocidade;
 
-            const animationName = `scroll-horizontal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const existingStyle = document.getElementById(`rss-animation-${container.id}`);
-            if (existingStyle) {
-               existingStyle.remove();
-            }
-            const style = document.createElement('style');
-            style.id = `rss-animation-${container.id}`;
-            style.textContent = `
-               @keyframes ${animationName} {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-${contentWidth}px); }
-               }
-            `;
-            document.head.appendChild(style);
+            ticker.style.animation = `scroll-horizontal ${duration}s linear infinite`;
 
-            ticker.style.animation = `${animationName} ${duration}s linear infinite`;
-
-            log(`RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s`);
+            log(`📺 RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s`);
          }, 100);
       }
 
@@ -292,7 +331,7 @@ if (empty($conteudos)) {
             return;
          }
 
-         log(`Mostrando conteúdo: ${content.arquivo} (${content.tipo}) - Canal: ${CONFIG.canalAtual}`);
+         log(`🎬 Mostrando: ${content.arquivo} (${content.tipo}) - Canal: ${CONFIG.canalAtual}`);
 
          container.innerHTML = '';
          showLoading();
@@ -308,6 +347,7 @@ if (empty($conteudos)) {
          const img = document.createElement('img');
          img.src = `../uploads/${content.arquivo}`;
          img.alt = 'Conteúdo corporativo';
+         img.loading = 'eager';
 
          img.onload = function() {
             const container = document.getElementById('media-container');
@@ -315,21 +355,25 @@ if (empty($conteudos)) {
 
             if (CONFIG.fadeTransition) {
                img.style.opacity = '0';
+               img.style.transform = 'scale(1.02)';
                container.appendChild(img);
-               setTimeout(() => {
+
+               requestAnimationFrame(() => {
+                  img.style.transition = 'opacity 0.6s ease-in-out, transform 0.6s ease-in-out';
                   img.style.opacity = '1';
-               }, 100);
+                  img.style.transform = 'scale(1)';
+               });
             } else {
                container.appendChild(img);
             }
 
             const duration = content.duracao * 1000;
             contentTimer = setTimeout(nextContent, duration);
-            log(`Imagem será exibida por ${content.duracao} segundos`);
+            log(`🖼️ Imagem será exibida por ${content.duracao} segundos`);
          };
 
          img.onerror = function() {
-            log(`Erro ao carregar imagem: ${content.arquivo}`);
+            log(`❌ Erro ao carregar imagem: ${content.arquivo}`);
             hideLoading();
             nextContent();
          };
@@ -340,6 +384,8 @@ if (empty($conteudos)) {
          video.src = `../uploads/${content.arquivo}`;
          video.autoplay = true;
          video.muted = false;
+         video.preload = 'auto';
+         video.playsInline = true;
 
          video.onloadeddata = function() {
             const container = document.getElementById('media-container');
@@ -347,24 +393,28 @@ if (empty($conteudos)) {
 
             if (CONFIG.fadeTransition) {
                video.style.opacity = '0';
+               video.style.transform = 'scale(1.02)';
                container.appendChild(video);
-               setTimeout(() => {
+
+               requestAnimationFrame(() => {
+                  video.style.transition = 'opacity 0.6s ease-in-out, transform 0.6s ease-in-out';
                   video.style.opacity = '1';
-               }, 100);
+                  video.style.transform = 'scale(1)';
+               });
             } else {
                container.appendChild(video);
             }
 
-            log(`Vídeo iniciado: ${content.arquivo} (duração: ${video.duration}s)`);
+            log(`🎥 Vídeo iniciado: ${content.arquivo} (duração: ${video.duration}s)`);
          };
 
          video.onended = function() {
-            log(`Vídeo finalizado: ${content.arquivo}`);
+            log(`✅ Vídeo finalizado: ${content.arquivo}`);
             nextContent();
          };
 
          video.onerror = function() {
-            log(`Erro ao carregar vídeo: ${content.arquivo}`);
+            log(`❌ Erro ao carregar vídeo: ${content.arquivo}`);
             hideLoading();
             nextContent();
          };
@@ -377,21 +427,21 @@ if (empty($conteudos)) {
          }
 
          currentIndex = (currentIndex + 1) % conteudos.length;
-         log(`Avançando para conteúdo ${currentIndex + 1} de ${conteudos.length}`);
-         setTimeout(showContent, 500);
+         log(`⏭️ Avançando para conteúdo ${currentIndex + 1} de ${conteudos.length}`);
+
+         // Pequeno delay para transição suave
+         setTimeout(showContent, CONFIG.fadeTransition ? 500 : 100);
       }
 
       function setupUpdateChecker() {
          updateTimer = setInterval(checkForUpdates, CONFIG.updateInterval);
-         log(`Verificação de atualizações configurada para cada ${CONFIG.updateInterval/1000} segundos`);
+         log(`🔄 Verificação de atualizações configurada para cada ${CONFIG.updateInterval/1000} segundos`);
       }
 
       function checkForUpdates() {
-         if (isFirstLoad) {
-            return;
-         }
+         if (isFirstLoad) return;
 
-         log('Verificando atualizações para canal ' + CONFIG.canalAtual + '...');
+         log('🔍 Verificando atualizações para canal ' + CONFIG.canalAtual + '...');
 
          fetch('../temp/tv_update.txt', {
                cache: 'no-cache',
@@ -409,22 +459,20 @@ if (empty($conteudos)) {
                const lastUpdate = localStorage.getItem('last_tv_update_' + CONFIG.canalAtual) || '0';
 
                if (timestamp !== lastUpdate) {
-                  log('Atualização detectada! Recarregando...');
+                  log('🚀 Atualização detectada! Recarregando...');
                   localStorage.setItem('last_tv_update_' + CONFIG.canalAtual, timestamp);
-                  setTimeout(() => {
-                     window.location.reload();
-                  }, 3000);
+                  setTimeout(() => window.location.reload(), 3000);
                }
+               updateConnectionStatus('online');
             })
             .catch(error => {
+               updateConnectionStatus('offline');
                checkContentUpdates();
             });
       }
 
       function checkContentUpdates() {
-         if (isFirstLoad) {
-            return;
-         }
+         if (isFirstLoad) return;
 
          fetch(`get_contents.php?canal=${CONFIG.canalAtual}`, {
                cache: 'no-cache',
@@ -435,16 +483,18 @@ if (empty($conteudos)) {
             .then(response => response.json())
             .then(newContents => {
                if (JSON.stringify(newContents) !== JSON.stringify(conteudos)) {
-                  log('Novos conteúdos detectados para canal ' + CONFIG.canalAtual + '! Atualizando...');
+                  log('🆕 Novos conteúdos detectados para canal ' + CONFIG.canalAtual + '! Atualizando...');
                   conteudos = newContents;
 
                   if (!isPlaying && newContents.length > 0) {
                      startPlayback();
                   }
                }
+               updateConnectionStatus('online');
             })
             .catch(error => {
-               log('Erro ao verificar atualizações: ' + error.message);
+               log('❌ Erro ao verificar atualizações: ' + error.message);
+               updateConnectionStatus('offline');
             });
       }
 
@@ -461,26 +511,33 @@ if (empty($conteudos)) {
                   break;
                case 'r':
                case 'R':
+                  log('🔄 Recarregando página...');
                   window.location.reload();
                   break;
                case 'c':
                case 'C':
+                  log('📺 Redirecionando para seleção de canal...');
                   window.location.href = 'index.php';
                   break;
                case 'f':
                case 'F':
-                  if (document.fullscreenElement) {
-                     document.exitFullscreen();
-                  } else {
-                     document.documentElement.requestFullscreen();
-                  }
+                  toggleFullscreen();
                   break;
                case 'u':
                case 'U':
+                  log('📡 Forçando atualização RSS...');
                   updateRSSContent();
                   break;
             }
          });
+      }
+
+      function toggleFullscreen() {
+         if (document.fullscreenElement) {
+            document.exitFullscreen();
+         } else {
+            document.documentElement.requestFullscreen();
+         }
       }
 
       function updateDateTime() {
@@ -524,12 +581,21 @@ if (empty($conteudos)) {
          document.getElementById('conteudo-principal').classList.add('hidden');
          document.getElementById('tela-sem-conteudo').classList.remove('hidden');
          isPlaying = false;
-         log('Exibindo tela de sem conteúdo para canal ' + CONFIG.canalAtual);
+         log('📺 Exibindo tela de sem conteúdo para canal ' + CONFIG.canalAtual);
       }
 
       function hideNoContentScreen() {
          document.getElementById('conteudo-principal').classList.remove('hidden');
          document.getElementById('tela-sem-conteudo').classList.add('hidden');
+      }
+
+      function updateConnectionStatus(status) {
+         const indicator = document.getElementById('connectionIndicator');
+         if (connectionStatus !== status) {
+            connectionStatus = status;
+            indicator.className = status === 'online' ? 'connection-indicator' : 'connection-indicator offline';
+            log(status === 'online' ? '🟢 Conexão online' : '🔴 Conexão offline');
+         }
       }
 
       function escapeHtml(text) {
@@ -540,15 +606,18 @@ if (empty($conteudos)) {
 
       function log(message) {
          if (CONFIG.debug) {
-            console.log(`[TV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
+            console.log(`[NatterTV-${CONFIG.canalAtual}] ${new Date().toLocaleTimeString()}: ${message}`);
          }
       }
 
+      // Funções para vídeos da sidebar (mantidas para compatibilidade)
       function initializeSidebarVideo() {
          const sidebarVideos = document.querySelectorAll('#sidebar-direita video');
 
          sidebarVideos.forEach((video, index) => {
-            console.log(`Inicializando vídeo da sidebar ${index + 1}`);
+            log(`🎬 Inicializando vídeo da sidebar ${index + 1}`);
+
+            // Configurações do vídeo
             video.setAttribute('playsinline', 'true');
             video.setAttribute('webkit-playsinline', 'true');
             video.setAttribute('x-webkit-airplay', 'deny');
@@ -556,60 +625,63 @@ if (empty($conteudos)) {
             video.muted = true;
             video.loop = true;
             video.autoplay = true;
+
+            // Event listeners
             video.addEventListener('loadedmetadata', function() {
-               console.log('Sidebar video metadata loaded');
                this.currentTime = 0;
                this.play().catch(e => {
-                  console.error('Erro ao reproduzir vídeo da sidebar:', e);
+                  log('❌ Erro ao reproduzir vídeo da sidebar: ' + e.message);
                   replaceVideoWithImage(this);
                });
             });
 
             video.addEventListener('canplay', function() {
-               console.log('Sidebar video can play');
                this.play().catch(e => {
-                  console.error('Erro ao reproduzir vídeo da sidebar (canplay):', e);
+                  log('❌ Erro ao reproduzir vídeo da sidebar (canplay): ' + e.message);
                   replaceVideoWithImage(this);
                });
             });
 
             video.addEventListener('ended', function() {
-               console.log('Sidebar video ended, restarting...');
                this.currentTime = 0;
                this.play().catch(e => {
-                  console.error('Erro ao reiniciar vídeo da sidebar:', e);
+                  log('❌ Erro ao reiniciar vídeo da sidebar: ' + e.message);
                });
             });
 
             video.addEventListener('error', function(e) {
-               console.error('Erro no vídeo da sidebar:', e, this.error);
+               log('❌ Erro no vídeo da sidebar: ' + e.message);
                replaceVideoWithImage(this);
             });
 
             video.addEventListener('stalled', function() {
-               console.warn('Vídeo da sidebar travado, tentando reiniciar...');
+               log('⚠️ Vídeo da sidebar travado, tentando reiniciar...');
                this.load();
                setTimeout(() => {
                   this.play().catch(e => {
-                     console.error('Erro ao reiniciar vídeo travado:', e);
+                     log('❌ Erro ao reiniciar vídeo travado: ' + e.message);
                      replaceVideoWithImage(this);
                   });
                }, 1000);
             });
+
+            // Verificação de reprodução
             setTimeout(() => {
                if (video.paused || video.currentTime === 0) {
-                  console.warn('Vídeo da sidebar não está reproduzindo, forçando...');
+                  log('⚠️ Vídeo da sidebar não está reproduzindo, forçando...');
                   video.load();
                   video.play().catch(e => {
-                     console.error('Falha final ao reproduzir vídeo da sidebar:', e);
+                     log('❌ Falha final ao reproduzir vídeo da sidebar: ' + e.message);
                      replaceVideoWithImage(video);
                   });
                }
             }, 3000);
+
+            // Monitor de travamento
             let lastTime = video.currentTime;
             setInterval(() => {
                if (!video.paused && video.currentTime === lastTime && video.readyState > 0) {
-                  console.warn('Vídeo da sidebar pode estar travado');
+                  log('⚠️ Vídeo da sidebar pode estar travado');
                   video.currentTime = video.currentTime + 0.1;
                }
                lastTime = video.currentTime;
@@ -618,10 +690,11 @@ if (empty($conteudos)) {
       }
 
       function replaceVideoWithImage(videoElement) {
-         console.log('Substituindo vídeo por imagem de fallback');
+         log('🖼️ Substituindo vídeo por imagem de fallback');
          const img = document.createElement('img');
          img.src = '../assets/images/propaganda.png';
          img.alt = 'Propaganda';
+         img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
 
          if (videoElement.parentNode) {
             videoElement.parentNode.replaceChild(img, videoElement);
@@ -632,16 +705,16 @@ if (empty($conteudos)) {
          const userAgent = navigator.userAgent.toLowerCase();
 
          if (userAgent.includes('tizen')) {
-            console.log('Samsung Smart TV detectada');
+            log('📱 Samsung Smart TV detectada');
             return 'samsung';
          } else if (userAgent.includes('webos')) {
-            console.log('LG Smart TV detectada');
+            log('📱 LG Smart TV detectada');
             return 'lg';
          } else if (userAgent.includes('android tv')) {
-            console.log('Android TV detectada');
+            log('📱 Android TV detectada');
             return 'android';
          } else if (userAgent.includes('hbbtv')) {
-            console.log('HbbTV detectada');
+            log('📱 HbbTV detectada');
             return 'hbbtv';
          }
 
@@ -674,23 +747,28 @@ if (empty($conteudos)) {
                break;
          }
       }
+
+      // Observer para novos vídeos na sidebar
       const sidebarObserver = new MutationObserver(function(mutations) {
          mutations.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
                if (node.nodeType === Node.ELEMENT_NODE) {
                   const videos = node.querySelectorAll ? node.querySelectorAll('video') : [];
                   if (videos.length > 0 || node.tagName === 'VIDEO') {
-                     console.log('Novo vídeo detectado na sidebar');
+                     log('🆕 Novo vídeo detectado na sidebar');
                      setTimeout(initializeSidebarVideo, 500);
                   }
                }
             });
          });
       });
+
+      // Inicialização dos vídeos da sidebar
       document.addEventListener('DOMContentLoaded', function() {
-         console.log('Inicializando sistema de vídeo da sidebar...');
+         log('🎬 Inicializando sistema de vídeo da sidebar...');
 
          applyDeviceSpecificSettings();
+
          const sidebar = document.getElementById('sidebar-direita');
          if (sidebar) {
             sidebarObserver.observe(sidebar, {
@@ -699,16 +777,15 @@ if (empty($conteudos)) {
             });
          }
 
-         setTimeout(initializeSidebarVideo, 1000);
-
+         // Monitor de vídeos pausados
          setInterval(() => {
             const videos = document.querySelectorAll('#sidebar-direita video');
             if (videos.length > 0) {
                videos.forEach(video => {
                   if (video.paused && video.readyState >= 3) {
-                     console.log('Re-iniciando vídeo pausado da sidebar');
+                     log('▶️ Re-iniciando vídeo pausado da sidebar');
                      video.play().catch(e => {
-                        console.error('Erro ao re-iniciar vídeo:', e);
+                        log('❌ Erro ao re-iniciar vídeo: ' + e.message);
                      });
                   }
                });

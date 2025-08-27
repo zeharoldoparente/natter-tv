@@ -60,8 +60,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
       $id = (int)$_GET['delete'];
       if (excluirConteudoLateral($id)) {
          $mensagem = "Conteúdo lateral excluído com sucesso!";
-      } else {
-         // $erro = "Erro ao excluir conteúdo lateral";
       }
    } catch (Exception $e) {
       $erro = $e->getMessage();
@@ -76,7 +74,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Gerenciar Conteúdo Lateral - NatterTV</title>
+   <title>Conteúdo Lateral - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -86,18 +84,19 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
 <body>
    <nav class="sidebar">
       <div class="sidebar-header">
-         <img class="img-sync" src="../assets/images/Natter Logo.PNG" alt="">
+         <img src="../assets/images/Natter Logo.PNG" alt="NatterTV">
          <h2>NatterTV</h2>
       </div>
       <ul class="sidebar-menu">
-         <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
-         <li><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+         <li><a href="upload.php"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
          <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
-         <li class="active"><a href="sidebar.php"><i class="fas fa-th-large"></i> Conteúdo Lateral</a></li>
+         <li class="active"><a href="sidebar.php"><i class="fas fa-bullhorn"></i> Conteúdo Lateral</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
    </nav>
+
    <main class="main-content">
       <header class="topbar">
          <h1><i class="fas fa-rectangle-wide"></i> Gerenciar Conteúdo Lateral</h1>
@@ -105,6 +104,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
             <span>Bem-vindo, <?php echo $_SESSION['nome'] ?? 'Admin'; ?>!</span>
          </div>
       </header>
+
       <div class="content">
          <?php if ($mensagem): ?>
             <div class="alert alert-success">
@@ -116,6 +116,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-info-circle"></i> Status Atual</h3>
@@ -166,6 +167,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                <?php endif; ?>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-cloud-upload-alt"></i> Enviar Novo Conteúdo Lateral</h3>
@@ -188,19 +190,22 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                         <input type="file" name="arquivo" id="arquivo" accept="image/*,video/*" required>
                      </div>
                   </div>
+
                   <div class="form-group">
                      <label for="descricao">
-                        <i class="fas fa-comment"></i> Descrição (Opcional)
+                        <i class="fas fa-comment-alt"></i> Descrição (Opcional)
                      </label>
                      <textarea name="descricao" id="descricao" rows="3"
                         placeholder="Descrição ou observações sobre este conteúdo"></textarea>
                   </div>
+
                   <div class="form-group">
                      <label>
                         <input type="checkbox" name="ativar_imediatamente" id="ativar_imediatamente" checked>
-                        Ativar imediatamente após upload
+                        <i class="fas fa-magic"></i> Ativar imediatamente após upload
                      </label>
                   </div>
+
                   <div class="form-actions">
                      <button type="submit" name="upload_lateral" class="btn btn-success">
                         <i class="fas fa-upload"></i> Enviar Conteúdo
@@ -209,13 +214,18 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                </form>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
-               <h3><i class="fas fa-list"></i> Histórico de Conteúdos Laterais</h3>
+               <h3><i class="fas fa-history"></i> Histórico de Conteúdos Laterais</h3>
             </div>
             <div class="card-body">
                <?php if (empty($conteudos)): ?>
-                  <p class="text-center">Nenhum conteúdo lateral encontrado.</p>
+                  <div class="no-content">
+                     <i class="fas fa-folder-open"></i>
+                     <h4>Nenhum conteúdo lateral encontrado</h4>
+                     <p>Envie seu primeiro conteúdo lateral usando o formulário acima.</p>
+                  </div>
                <?php else: ?>
                   <div class="table-responsive">
                      <table class="content-table">
@@ -246,6 +256,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                                  <td class="filename"><?php echo htmlspecialchars($conteudo['nome_original']); ?></td>
                                  <td>
                                     <span class="badge badge-<?php echo $conteudo['tipo'] === 'imagem' ? 'info' : 'warning'; ?>">
+                                       <i class="fas fa-<?php echo $conteudo['tipo'] === 'imagem' ? 'image' : 'video'; ?>"></i>
                                        <?php echo ucfirst($conteudo['tipo']); ?>
                                     </span>
                                  </td>
@@ -255,12 +266,18 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                                           <i class="fas fa-eye"></i> Ativo
                                        </span>
                                     <?php else: ?>
-                                       <span class="badge badge-secondary">Inativo</span>
+                                       <span class="badge badge-secondary">
+                                          <i class="fas fa-eye-slash"></i> Inativo
+                                       </span>
                                     <?php endif; ?>
                                  </td>
                                  <td>
-                                    <?php echo date('d/m/Y H:i', strtotime($conteudo['data_upload'])); ?><br>
-                                    <small><?php echo htmlspecialchars($conteudo['usuario_nome'] ?? 'Usuário'); ?></small>
+                                    <div style="font-size: 0.85rem;">
+                                       <?php echo date('d/m/Y H:i', strtotime($conteudo['data_upload'])); ?><br>
+                                       <small style="color: #64748b;">
+                                          <i class="fas fa-user"></i> <?php echo htmlspecialchars($conteudo['usuario_nome'] ?? 'Usuário'); ?>
+                                       </small>
+                                    </div>
                                  </td>
                                  <td>
                                     <div class="description-cell">
@@ -287,7 +304,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                                        class="btn btn-danger btn-sm"
                                        onclick="return confirm('Tem certeza que deseja excluir este conteúdo lateral?')"
                                        title="Excluir">
-                                       <i class="fas fa-trash"></i>
+                                       <i class="fas fa-trash-alt"></i>
                                     </a>
                                  </td>
                               </tr>
@@ -300,6 +317,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          </div>
       </div>
    </main>
+
    <div id="edit-description-modal" class="modal">
       <div class="modal-content">
          <span class="close" onclick="closeDescriptionModal()">&times;</span>
@@ -308,7 +326,9 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
             <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
             <input type="hidden" name="conteudo_id" id="edit-content-id">
             <div class="form-group">
-               <label for="nova_descricao">Descrição:</label>
+               <label for="nova_descricao">
+                  <i class="fas fa-comment-alt"></i> Descrição:
+               </label>
                <textarea name="nova_descricao" id="nova_descricao" rows="3"
                   placeholder="Digite a nova descrição"></textarea>
             </div>
@@ -317,12 +337,13 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                   <i class="fas fa-save"></i> Salvar
                </button>
                <button type="button" class="btn btn-secondary" onclick="closeDescriptionModal()">
-                  Cancelar
+                  <i class="fas fa-times"></i> Cancelar
                </button>
             </div>
          </form>
       </div>
    </div>
+
    <script src="../assets/js/admin.js"></script>
    <script>
       function editDescription(id, currentDescription) {
@@ -334,6 +355,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
       function closeDescriptionModal() {
          document.getElementById('edit-description-modal').classList.remove('visible');
       }
+
       const dropZone = document.getElementById('dropZone');
       const fileInput = document.getElementById('arquivo');
 
@@ -374,6 +396,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                showFilePreviewSidebar(files[0]);
             }
          }
+
          fileInput.addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                showFilePreviewSidebar(e.target.files[0]);
@@ -386,6 +409,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          if (!validateFileSidebar(file)) {
             return;
          }
+
          let preview = document.getElementById('sidebarFilePreview');
          if (!preview) {
             preview = createPreviewContainerSidebar();
@@ -395,12 +419,12 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          const fileName = preview.querySelector('.file-name');
          const fileSize = preview.querySelector('.file-size');
          const fileType = preview.querySelector('.file-type');
-         if (mediaContainer) {
-            mediaContainer.innerHTML = '';
-         }
+
+         if (mediaContainer) mediaContainer.innerHTML = '';
          if (fileName) fileName.textContent = file.name;
          if (fileSize) fileSize.textContent = formatFileSize(file.size);
          if (fileType) fileType.textContent = getFileTypeLabel(file.type);
+
          const reader = new FileReader();
          reader.onload = function(e) {
             console.log('Arquivo carregado para preview sidebar');
@@ -413,13 +437,13 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                mediaElement.src = dataUrl;
                mediaElement.alt = file.name;
                mediaElement.style.cssText = `
-               max-width: 150px;
-               max-height: 120px;
-               object-fit: cover;
-               border-radius: 8px;
-               border: 2px solid #166353;
-               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            `;
+                  max-width: 150px;
+                  max-height: 120px;
+                  object-fit: cover;
+                  border-radius: 8px;
+                  border: 2px solid #166353;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+               `;
             } else if (file.type.startsWith('video/')) {
                mediaElement = document.createElement('video');
                mediaElement.src = dataUrl;
@@ -427,12 +451,12 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                mediaElement.muted = true;
                mediaElement.preload = 'metadata';
                mediaElement.style.cssText = `
-               max-width: 150px;
-               max-height: 120px;
-               border-radius: 8px;
-               border: 2px solid #166353;
-               box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            `;
+                  max-width: 150px;
+                  max-height: 120px;
+                  border-radius: 8px;
+                  border: 2px solid #166353;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+               `;
             }
 
             if (mediaElement && mediaContainer) {
@@ -457,20 +481,21 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          preview.id = 'sidebarFilePreview';
          preview.className = 'file-preview';
          preview.innerHTML = `
-         <div class="preview-content">
-            <div class="preview-media">
-               <div style="color: #999; font-size: 0.9rem;">Preview aparecerá aqui</div>
+            <div class="preview-content">
+               <div class="preview-media">
+                  <div style="color: #999; font-size: 0.9rem;">Preview aparecerá aqui</div>
+               </div>
+               <div class="preview-info">
+                  <h5 class="file-name"></h5>
+                  <p class="file-size"></p>
+                  <p class="file-type"></p>
+               </div>
+               <button type="button" class="btn-remove-file" onclick="removeFilePreviewSidebar()">
+                  <i class="fas fa-times"></i>
+               </button>
             </div>
-            <div class="preview-info">
-               <h5 class="file-name"></h5>
-               <p class="file-size"></p>
-               <p class="file-type"></p>
-            </div>
-            <button type="button" class="btn-remove-file" onclick="removeFilePreviewSidebar()">
-               <i class="fas fa-times"></i>
-            </button>
-         </div>
-      `;
+         `;
+
          const dropZone = document.getElementById('dropZone');
          if (dropZone && dropZone.parentNode) {
             dropZone.parentNode.insertBefore(preview, dropZone.nextSibling);
@@ -494,7 +519,7 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
       }
 
       function validateFileSidebar(file) {
-         const maxSize = 52428800;
+         const maxSize = 52428800; // 50MB
          const allowedTypes = [
             'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
             'image/webp', 'image/bmp',
@@ -543,113 +568,31 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
             type === 'error' ? 'exclamation-circle' : 'info-circle';
 
          alert.innerHTML = `
-         <i class="fas fa-${icon}"></i> ${message}
-         <button type="button" class="alert-close" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-         </button>
-      `;
+            <i class="fas fa-${icon}"></i> ${message}
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+               <i class="fas fa-times"></i>
+            </button>
+         `;
 
          const content = document.querySelector('.content');
          if (content) {
             content.insertBefore(alert, content.firstChild);
          }
+
          setTimeout(() => {
             if (alert.parentNode) {
                alert.remove();
             }
          }, 5000);
       }
-      if (!document.getElementById('sidebar-preview-styles')) {
-         const style = document.createElement('style');
-         style.id = 'sidebar-preview-styles';
-         style.textContent = `
-         .file-preview {
-            margin-top: 15px;
-            border: 2px solid #e1e8ed;
-            border-radius: 10px;
-            padding: 15px;
-            background: #f8f9fa;
-            animation: slideDown 0.3s ease-out;
-         }
-         
-         .preview-content {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: relative;
-         }
-         
-         .preview-media {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 150px;
-            min-height: 120px;
-            background: #fff;
-            border-radius: 8px;
-            border: 2px dashed #ddd;
-         }
-         
-         .preview-info h5 {
-            margin: 0 0 5px 0;
-            color: #166353;
-            font-size: 1rem;
-            word-break: break-word;
-         }
-         
-         .preview-info p {
-            margin: 2px 0;
-            color: #666;
-            font-size: 0.9rem;
-         }
-         
-         .btn-remove-file {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-         }
-         
-         .hidden {
-            display: none !important;
-         }
-         
-         @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-         }
-         
-         .alert-dynamic {
-            position: relative;
-            margin-bottom: 20px;
-            animation: slideDown 0.3s ease-out;
-         }
-         
-         .alert-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: inherit;
-            opacity: 0.7;
-            cursor: pointer;
-            font-size: 1.2rem;
-         }
-      `;
-         document.head.appendChild(style);
-      }
+
+      // Add animation delays
+      document.addEventListener('DOMContentLoaded', function() {
+         const cards = document.querySelectorAll('.card');
+         cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+         });
+      });
    </script>
 </body>
 

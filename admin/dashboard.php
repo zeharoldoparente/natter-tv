@@ -56,7 +56,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Painel Administrativo - NatterTV</title>
+   <title>Dashboard - NatterTV</title>
    <link rel="stylesheet" href="../assets/css/base.css">
    <link rel="stylesheet" href="../assets/css/admin-style.css">
    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -66,14 +66,14 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 <body>
    <nav class="sidebar">
       <div class="sidebar-header">
-         <img class="img-sync" src="../assets/images/Natter Logo.PNG" alt="">
+         <img src="../assets/images/Natter Logo.PNG" alt="NatterTV">
          <h2>NatterTV</h2>
       </div>
       <ul class="sidebar-menu">
-         <li class="active"><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
-         <li><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li class="active"><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+         <li><a href="upload.php"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
          <li><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
-         <li><a href="sidebar.php"><i class="fas fa-th-large"></i> Conteúdo Lateral</a></li>
+         <li><a href="sidebar.php"><i class="fas fa-bullhorn"></i> Conteúdo Lateral</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
@@ -81,7 +81,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
 
    <main class="main-content">
       <header class="topbar">
-         <h1><i class="fas fa-dashboard"></i> Painel de Controle</h1>
+         <h1><i class="fas fa-chart-line"></i> Painel de Controle</h1>
          <div class="user-info">
             <span>Bem-vindo, <?php echo $_SESSION['nome'] ?? 'Admin'; ?>!</span>
          </div>
@@ -101,7 +101,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             <div class="card-body">
                <form method="POST" class="inline-block">
                   <button type="submit" name="atualizar_tv" class="btn btn-primary">
-                     <i class="fas fa-sync"></i> Atualizar TV Agora
+                     <i class="fas fa-sync-alt"></i> Atualizar TV Agora
                   </button>
                </form>
                <a href="../tv/index.php" target="_blank" class="btn btn-secondary">
@@ -112,6 +112,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                </a>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-chart-pie"></i> Estatísticas do Sistema</h3>
@@ -146,7 +147,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                <div class="stats-overview">
                   <div class="stat-card">
                      <div class="stat-icon">
-                        <i class="fas fa-file"></i>
+                        <i class="fas fa-file-alt"></i>
                      </div>
                      <div class="stat-info">
                         <h3><?php echo $stats_conteudo['total_arquivos']; ?></h3>
@@ -227,7 +228,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                            </a>
                         </div>
                         <div class="channel-stats">
-                           <span><i class="fas fa-file"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
+                           <span><i class="fas fa-file-alt"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
                            <span><i class="fas fa-image"></i> <?php echo $stat['total_imagens']; ?> imagens</span>
                            <span><i class="fas fa-video"></i> <?php echo $stat['total_videos']; ?> vídeos</span>
                            <span><i class="fas fa-rss"></i> <?php echo $rss_por_canal[$stat['codigo_canal']] ?? 0; ?> feeds RSS</span>
@@ -318,7 +319,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                         }
 
                         if ($res->num_rows == 0) {
-                           $colspan = $canal_filtro ? 7 : 7;
+                           $colspan = 7;
                            echo "<tr><td colspan='{$colspan}' class='text-center'>Nenhum conteúdo encontrado</td></tr>";
                         } else {
                            while ($row = $res->fetch_assoc()) {
@@ -343,7 +344,7 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                                                 </a>
                                                 <a href='?delete={$row['id']}' class='btn btn-danger btn-sm' 
                                                    onclick='return confirm(\"Tem certeza que deseja excluir este arquivo?\")'>
-                                                    <i class='fas fa-trash'></i>
+                                                    <i class='fas fa-trash-alt'></i>
                                                 </a>
                                             </td>
                                         </tr>";
@@ -367,6 +368,12 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             input.addEventListener('input', function(e) {
                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             });
+         });
+
+         // Add smooth animations
+         const cards = document.querySelectorAll('.card');
+         cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
          });
       });
    </script>

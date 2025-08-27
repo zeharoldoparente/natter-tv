@@ -157,14 +157,14 @@ if ($res) {
 <body>
    <nav class="sidebar">
       <div class="sidebar-header">
-         <img class="img-sync" src="../assets/images/Natter Logo.PNG" alt="">
+         <img src="../assets/images/Natter Logo.PNG" alt="NatterTV">
          <h2>NatterTV</h2>
       </div>
       <ul class="sidebar-menu">
-         <li><a href="dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
-         <li><a href="upload.php"><i class="fas fa-upload"></i> Upload</a></li>
+         <li><a href="dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+         <li><a href="upload.php"><i class="fas fa-cloud-upload-alt"></i> Upload</a></li>
          <li class="active"><a href="rss.php"><i class="fas fa-rss"></i> RSS Feeds</a></li>
-         <li><a href="sidebar.php"><i class="fas fa-th-large"></i> Conteúdo Lateral</a></li>
+         <li><a href="sidebar.php"><i class="fas fa-bullhorn"></i> Conteúdo Lateral</a></li>
          <li><a href="../tv/index.php" target="_blank"><i class="fas fa-external-link-alt"></i> Ver TV</a></li>
          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
       </ul>
@@ -190,15 +190,16 @@ if ($res) {
                <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             </div>
          <?php endif; ?>
+
          <div class="card">
             <div class="card-header">
-               <h3><i class="fas fa-sync"></i> Controles RSS</h3>
+               <h3><i class="fas fa-sync-alt"></i> Controles RSS</h3>
             </div>
             <div class="card-body">
                <form method="POST" style="display: inline-block;">
                   <input type="hidden" name="csrf_token" value="<?php echo gerarTokenCSRF(); ?>">
                   <button type="submit" name="atualizar_todos_feeds" class="btn btn-primary">
-                     <i class="fas fa-sync"></i> Atualizar Todos os Feeds
+                     <i class="fas fa-sync-alt"></i> Atualizar Todos os Feeds
                   </button>
                </form>
                <a href="../tv/index.php" target="_blank" class="btn btn-secondary">
@@ -206,9 +207,10 @@ if ($res) {
                </a>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
-               <h3><i class="fas fa-plus"></i> Adicionar Feed RSS</h3>
+               <h3><i class="fas fa-plus-circle"></i> Adicionar Feed RSS</h3>
             </div>
             <div class="card-body">
                <form method="POST" class="rss-form">
@@ -274,19 +276,24 @@ if ($res) {
                   </div>
                   <div class="form-actions">
                      <button type="submit" name="adicionar_feed" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Adicionar Feed
+                        <i class="fas fa-plus-circle"></i> Adicionar Feed
                      </button>
                   </div>
                </form>
             </div>
          </div>
+
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-list"></i> Feeds RSS Cadastrados</h3>
             </div>
             <div class="card-body">
                <?php if (empty($feeds)): ?>
-                  <p class="text-center">Nenhum feed RSS cadastrado ainda.</p>
+                  <div class="no-content">
+                     <i class="fas fa-rss"></i>
+                     <h4>Nenhum feed RSS cadastrado</h4>
+                     <p>Adicione seu primeiro feed RSS usando o formulário acima.</p>
+                  </div>
                <?php else: ?>
                   <div class="table-responsive">
                      <table class="content-table">
@@ -342,7 +349,7 @@ if ($res) {
                                     <a href="?delete=<?php echo $feed['id']; ?>"
                                        class="btn btn-danger btn-sm"
                                        onclick="return confirm('Tem certeza que deseja excluir este feed?')">
-                                       <i class="fas fa-trash"></i>
+                                       <i class="fas fa-trash-alt"></i>
                                     </a>
                                  </td>
                               </tr>
@@ -355,6 +362,7 @@ if ($res) {
          </div>
       </div>
    </main>
+
    <div id="edit-modal" class="modal">
       <div class="modal-content">
          <span class="close" onclick="fecharModal()">&times;</span>
@@ -410,12 +418,17 @@ if ($res) {
                </div>
             </div>
             <div class="form-actions">
-               <button type="submit" name="atualizar_feed" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
-               <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+               <button type="submit" name="atualizar_feed" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Salvar Alterações
+               </button>
+               <button type="button" class="btn btn-secondary" onclick="fecharModal()">
+                  <i class="fas fa-times"></i> Cancelar
+               </button>
             </div>
          </form>
       </div>
    </div>
+
    <script src="../assets/js/admin.js"></script>
    <script>
       const feedsData = <?php echo json_encode($feeds); ?>;
@@ -423,6 +436,7 @@ if ($res) {
       function editarFeed(id) {
          const feed = feedsData.find((f) => f.id == id);
          if (!feed) return;
+
          document.getElementById('edit-feed-id').value = feed.id;
          document.getElementById('edit-nome').value = feed.nome;
          document.getElementById('edit-url_feed').value = feed.url_feed;
@@ -432,6 +446,7 @@ if ($res) {
          document.getElementById('edit-cor_fundo').value = feed.cor_fundo;
          document.getElementById('edit-posicao').value = feed.posicao;
          document.getElementById('edit-ativo').checked = feed.ativo == 1;
+
          const modal = document.getElementById('edit-modal');
          modal.classList.add('visible');
       }
@@ -439,6 +454,14 @@ if ($res) {
       function fecharModal() {
          document.getElementById('edit-modal').classList.remove('visible');
       }
+
+      // Add animation delays
+      document.addEventListener('DOMContentLoaded', function() {
+         const cards = document.querySelectorAll('.card');
+         cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+         });
+      });
    </script>
 </body>
 
