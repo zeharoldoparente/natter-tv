@@ -59,6 +59,213 @@ $isOperadorRestrito = (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'oper
 if ($isOperadorRestrito) {
    $canal_filtro = $canal_usuario;
 }
+$stats_conteudo = [
+   'total_arquivos' => 0,
+   'total_imagens' => 0,
+   'total_videos' => 0,
+   'espaco_usado' => 0
+];
+
+$stats_rss = [
+   'total_feeds' => 0,
+   'feeds_ativos' => 0,
+   'canais_rss' => 0
+];
+
+$stats_rss_items = [
+   'total_items' => 0
+];
+
+try {
+   if ($isOperadorRestrito) {
+      $stmt = $conn->prepare("
+            SELECT COUNT(*) as total_arquivos, 
+                   SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, 
+                   SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, 
+                   SUM(tamanho) as espaco_usado 
+            FROM conteudos 
+            WHERE ativo = 1 AND codigo_canal = ?
+        ");
+
+      if ($stmt) {
+         $stmt->bind_param("s", $canal_usuario);
+         $stmt->execute();
+         $result = $stmt->get_result();
+         if ($result && $row = $result->fetch_assoc()) {
+            $stats_conteudo = [
+               'total_arquivos' => (int)($row['total_arquivos'] ?? 0),
+               'total_imagens' => (int)($row['total_imagens'] ?? 0),
+               'total_videos' => (int)($row['total_videos'] ?? 0),
+               'espaco_usado' => (int)($row['espaco_usado'] ?? 0)
+            ];
+         }
+         $stmt->close();
+      }
+   } else {
+      $result = $conn->query("
+            SELECT COUNT(*) as total_arquivos, 
+                   SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, 
+                   SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, 
+                   SUM(tamanho) as espaco_usado 
+            FROM conteudos 
+            WHERE ativo = 1
+        ");
+
+      if ($result && $row = $result->fetch_assoc()) {
+         $stats_conteudo = [
+            'total_arquivos' => (int)($row['total_arquivos'] ?? 0),
+            'total_imagens' => (int)($row['total_imagens'] ?? 0),
+            'total_videos' => (int)($row['total_videos'] ?? 0),
+            'espaco_usado' => (int)($row['espaco_usado'] ?? 0)
+         ];
+      }
+   }
+   if ($isOperadorRestrito) {
+      $stmt = $conn->prepare("
+            SELECT COUNT(*) as total_feeds, 
+                   SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, 
+                   COUNT(DISTINCT codigo_canal) as canais_rss 
+            FROM feeds_rss 
+            WHERE codigo_canal = ?
+        ");
+
+      if ($stmt) {
+         $stmt->bind_param("s", $canal_usuario);
+         $stmt->execute();
+         $result = $stmt->get_result();
+         if ($result && $row = $result->fetch_assoc()) {
+            $stats_rss = [
+               'total_feeds' => (int)($row['total_feeds'] ?? 0),
+               'feeds_ativos' => (int)($row['feeds_ativos'] ?? 0),
+               'canais_rss' => (int)($row['canais_rss'] ?? 0)
+            ];
+         }
+         $stmt->close();
+      }
+   } else {
+      $result = $conn->query("
+            SELECT COUNT(*) as total_feeds, 
+                   SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, 
+                   COUNT(DISTINCT codigo_canal) as canais_rss 
+            FROM feeds_rss
+        ");
+
+      if ($result && $row = $result->fetch_assoc()) {
+         $stats_rss = [
+            'total_feeds' => (int)($row['total_feeds'] ?? 0),
+            'feeds_ativos' => (int)($row['feeds_ativos'] ?? 0),
+            'canais_rss' => (int)($row['canais_rss'] ?? 0)
+         ];
+      }
+   }
+   if ($isOperadorRestrito) {
+      $stmt = $conn->prepare("
+            SELECT COUNT(*) as total_items 
+            FROM cache_rss c 
+            INNER JOIN feeds_rss f ON c.feed_id = f.id 
+            WHERE f.ativo = 1 AND f.codigo_canal = ?
+        ");
+
+      if ($stmt) {
+         $stmt->bind_param("s", $canal_usuario);
+         $stmt->execute();
+         $result = $stmt->get_result();
+         if ($result && $row = $result->fetch_assoc()) {
+            $stats_rss_items = [
+               'total_items' => (int)($row['total_items'] ?? 0)
+            ];
+         }
+         $stmt->close();
+      }
+   } else {
+      $result = $conn->query("
+            SELECT COUNT(*) as total_items 
+            FROM cache_rss c 
+            INNER JOIN feeds_rss f ON c.feed_id = f.id 
+            WHERE f.ativo = 1
+        ");
+
+      if ($result && $row = $result->fetch_assoc()) {
+         $stats_rss_items = [
+            'total_items' => (int)($row['total_items'] ?? 0)
+         ];
+      }
+   }
+} catch (Exception $e) {
+   error_log("Erro ao buscar estatísticas: " . $e->getMessage());
+}
+$stats_query = null;
+$rss_por_canal = [];
+
+try {
+   if ($isOperadorRestrito) {
+      $stmt = $conn->prepare("
+            SELECT codigo_canal, 
+                   COUNT(*) as total_arquivos, 
+                   SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, 
+                   SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, 
+                   SUM(tamanho) as espaco_usado 
+            FROM conteudos 
+            WHERE ativo = 1 AND codigo_canal = ? 
+            GROUP BY codigo_canal 
+            ORDER BY codigo_canal
+        ");
+
+      if ($stmt) {
+         $stmt->bind_param("s", $canal_usuario);
+         $stmt->execute();
+         $stats_query = $stmt->get_result();
+         $stmt->close();
+      }
+
+      $stmt2 = $conn->prepare("
+            SELECT codigo_canal, COUNT(*) as total_feeds 
+            FROM feeds_rss 
+            WHERE ativo = 1 AND codigo_canal = ? 
+            GROUP BY codigo_canal
+        ");
+
+      if ($stmt2) {
+         $stmt2->bind_param("s", $canal_usuario);
+         $stmt2->execute();
+         $rss_result = $stmt2->get_result();
+         if ($rss_result) {
+            while ($row = $rss_result->fetch_assoc()) {
+               $rss_por_canal[$row['codigo_canal']] = (int)$row['total_feeds'];
+            }
+         }
+         $stmt2->close();
+      }
+   } else {
+      $stats_query = $conn->query("
+            SELECT codigo_canal, 
+                   COUNT(*) as total_arquivos, 
+                   SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, 
+                   SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, 
+                   SUM(tamanho) as espaco_usado 
+            FROM conteudos 
+            WHERE ativo = 1 
+            GROUP BY codigo_canal 
+            ORDER BY codigo_canal
+        ");
+
+      $rss_result = $conn->query("
+            SELECT codigo_canal, COUNT(*) as total_feeds 
+            FROM feeds_rss 
+            WHERE ativo = 1 
+            GROUP BY codigo_canal
+        ");
+
+      if ($rss_result) {
+         while ($row = $rss_result->fetch_assoc()) {
+            $rss_por_canal[$row['codigo_canal']] = (int)$row['total_feeds'];
+         }
+      }
+   }
+} catch (Exception $e) {
+   error_log("Erro ao buscar estatísticas por canal: " . $e->getMessage());
+   $stats_query = null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -131,32 +338,6 @@ if ($isOperadorRestrito) {
                <h3><i class="fas fa-chart-pie"></i> Estatísticas do Sistema</h3>
             </div>
             <div class="card-body">
-               <?php
-               if ($isOperadorRestrito) {
-                  $stmt = $conn->prepare("SELECT COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 AND codigo_canal = ?");
-                  $stmt->bind_param("s", $canal_usuario);
-                  $stmt->execute();
-                  $stats_conteudo = $stmt->get_result()->fetch_assoc();
-                  $stmt->close();
-
-                  $stmt = $conn->prepare("SELECT COUNT(*) as total_feeds, SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, COUNT(DISTINCT codigo_canal) as canais_rss FROM feeds_rss WHERE codigo_canal = ?");
-                  $stmt->bind_param("s", $canal_usuario);
-                  $stmt->execute();
-                  $stats_rss = $stmt->get_result()->fetch_assoc();
-                  $stmt->close();
-
-                  $stmt = $conn->prepare("SELECT COUNT(*) as total_items FROM cache_rss c INNER JOIN feeds_rss f ON c.feed_id = f.id WHERE f.ativo = 1 AND f.codigo_canal = ?");
-                  $stmt->bind_param("s", $canal_usuario);
-                  $stmt->execute();
-                  $stats_rss_items = $stmt->get_result()->fetch_assoc();
-                  $stmt->close();
-               } else {
-                  $stats_conteudo = $conn->query("SELECT COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1")->fetch_assoc();
-                  $stats_rss = $conn->query("SELECT COUNT(*) as total_feeds, SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as feeds_ativos, COUNT(DISTINCT codigo_canal) as canais_rss FROM feeds_rss")->fetch_assoc();
-                  $stats_rss_items = $conn->query("SELECT COUNT(*) as total_items FROM cache_rss c INNER JOIN feeds_rss f ON c.feed_id = f.id WHERE f.ativo = 1")->fetch_assoc();
-               }
-               ?>
-
                <div class="stats-overview">
                   <div class="stat-card">
                      <div class="stat-icon">
@@ -206,61 +387,46 @@ if ($isOperadorRestrito) {
                <h3><i class="fas fa-chart-bar"></i> Resumo por Canal</h3>
             </div>
             <div class="card-body">
-               <?php
-               if ($isOperadorRestrito) {
-                  $stmt = $conn->prepare("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 AND codigo_canal = ? GROUP BY codigo_canal ORDER BY codigo_canal");
-                  $stmt->bind_param("s", $canal_usuario);
-                  $stmt->execute();
-                  $stats_query = $stmt->get_result();
-                  $stmt->close();
-
-                  $rss_por_canal = [];
-                  $stmt2 = $conn->prepare("SELECT codigo_canal, COUNT(*) as total_feeds FROM feeds_rss WHERE ativo = 1 AND codigo_canal = ? GROUP BY codigo_canal");
-                  $stmt2->bind_param("s", $canal_usuario);
-                  $stmt2->execute();
-                  $rss_query = $stmt2->get_result();
-                  while ($row = $rss_query->fetch_assoc()) {
-                     $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
-                  }
-                  $stmt2->close();
-               } else {
-                  $stats_query = $conn->query("SELECT codigo_canal, COUNT(*) as total_arquivos, SUM(CASE WHEN tipo = 'imagem' THEN 1 ELSE 0 END) as total_imagens, SUM(CASE WHEN tipo = 'video' THEN 1 ELSE 0 END) as total_videos, SUM(tamanho) as espaco_usado FROM conteudos WHERE ativo = 1 GROUP BY codigo_canal ORDER BY codigo_canal");
-                  $rss_por_canal = [];
-                  $rss_query = $conn->query("SELECT codigo_canal, COUNT(*) as total_feeds FROM feeds_rss WHERE ativo = 1 GROUP BY codigo_canal");
-                  while ($row = $rss_query->fetch_assoc()) {
-                     $rss_por_canal[$row['codigo_canal']] = $row['total_feeds'];
-                  }
-               }
-               ?>
-
                <div class="channels-overview">
-                  <?php while ($stat = $stats_query->fetch_assoc()): ?>
-                     <div class="channel-overview-card">
-                        <div class="channel-header">
-                           <h4><i class="fas fa-tv"></i> Canal: <?php echo htmlspecialchars($stat['codigo_canal']); ?></h4>
-                           <a href="?canal=<?php echo urlencode($stat['codigo_canal']); ?>" class="btn-filter">
-                              <i class="fas fa-filter"></i> Filtrar
-                           </a>
+                  <?php
+                  if ($stats_query && $stats_query->num_rows > 0):
+                     while ($stat = $stats_query->fetch_assoc()):
+                  ?>
+                        <div class="channel-overview-card">
+                           <div class="channel-header">
+                              <h4><i class="fas fa-tv"></i> Canal: <?php echo htmlspecialchars($stat['codigo_canal']); ?></h4>
+                              <a href="?canal=<?php echo urlencode($stat['codigo_canal']); ?>" class="btn-filter">
+                                 <i class="fas fa-filter"></i> Filtrar
+                              </a>
+                           </div>
+                           <div class="channel-stats">
+                              <span><i class="fas fa-file-alt"></i> <?php echo (int)($stat['total_arquivos'] ?? 0); ?> arquivos</span>
+                              <span><i class="fas fa-image"></i> <?php echo (int)($stat['total_imagens'] ?? 0); ?> imagens</span>
+                              <span><i class="fas fa-video"></i> <?php echo (int)($stat['total_videos'] ?? 0); ?> vídeos</span>
+                              <span><i class="fas fa-rss"></i> <?php echo $rss_por_canal[$stat['codigo_canal']] ?? 0; ?> feeds RSS</span>
+                              <span><i class="fas fa-hdd"></i> <?php echo formatFileSize((int)($stat['espaco_usado'] ?? 0)); ?></span>
+                           </div>
+                           <div class="channel-actions">
+                              <a href="../tv/index.php?canal=<?php echo urlencode($stat['codigo_canal']); ?>"
+                                 target="_blank" class="btn btn-sm btn-secondary">
+                                 <i class="fas fa-eye"></i> Ver Canal
+                              </a>
+                              <a href="rss.php?canal=<?php echo urlencode($stat['codigo_canal']); ?>"
+                                 class="btn btn-sm btn-success">
+                                 <i class="fas fa-rss"></i> RSS
+                              </a>
+                           </div>
                         </div>
-                        <div class="channel-stats">
-                           <span><i class="fas fa-file-alt"></i> <?php echo $stat['total_arquivos']; ?> arquivos</span>
-                           <span><i class="fas fa-image"></i> <?php echo $stat['total_imagens']; ?> imagens</span>
-                           <span><i class="fas fa-video"></i> <?php echo $stat['total_videos']; ?> vídeos</span>
-                           <span><i class="fas fa-rss"></i> <?php echo $rss_por_canal[$stat['codigo_canal']] ?? 0; ?> feeds RSS</span>
-                           <span><i class="fas fa-hdd"></i> <?php echo formatFileSize($stat['espaco_usado']); ?></span>
-                        </div>
-                        <div class="channel-actions">
-                           <a href="../tv/index.php?canal=<?php echo urlencode($stat['codigo_canal']); ?>"
-                              target="_blank" class="btn btn-sm btn-secondary">
-                              <i class="fas fa-eye"></i> Ver Canal
-                           </a>
-                           <a href="rss.php?canal=<?php echo urlencode($stat['codigo_canal']); ?>"
-                              class="btn btn-sm btn-success">
-                              <i class="fas fa-rss"></i> RSS
-                           </a>
-                        </div>
+                     <?php
+                     endwhile;
+                  else:
+                     ?>
+                     <div class="no-content">
+                        <i class="fas fa-tv"></i>
+                        <h4>Nenhum canal encontrado</h4>
+                        <p>Ainda não há conteúdo cadastrado no sistema.</p>
                      </div>
-                  <?php endwhile; ?>
+                  <?php endif; ?>
                </div>
             </div>
          </div>
