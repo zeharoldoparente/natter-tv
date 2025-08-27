@@ -1,21 +1,8 @@
+@import url('base.css');
+
 :root {
-   --primary-color: #f07d00;
-   --green-color: #166353;
-   --secondary-color: #3498db;
-   --success-color: #27ae60;
-   --warning-color: #f39c12;
-   --danger-color: #e74c3c;
-   --info-color: #3498db;
-   --light-color: #ecf0f1;
-   --dark-color: #2c3e50;
    --sidebar-width: 250px;
    --topbar-height: 60px;
-}
-
-* {
-   margin: 0;
-   padding: 0;
-   box-sizing: border-box;
 }
 
 body {

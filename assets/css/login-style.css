@@ -1,19 +1,4 @@
-* {
-   margin: 0;
-   padding: 0;
-   box-sizing: border-box;
-}
-
-:root {
-   --primary-color: #f07d00;
-   --green-color: #166353;
-   --secondary-color: #3498db;
-   --success-color: #27ae60;
-   --warning-color: #f39c12;
-   --danger-color: #e74c3c;
-   --light-color: #ecf0f1;
-   --dark-color: #2c3e50;
-}
+@import url('base.css');
 
 body {
    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -40,7 +25,7 @@ body::before {
       ),
       radial-gradient(
          circle at 80% 20%,
-         rgba(243, 156, 18, 0.1) 0%,
+         rgba(240, 125, 0, 0.1) 0%,
          transparent 50%
       );
    z-index: -1;
