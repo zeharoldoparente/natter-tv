@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('Erro ao adicionar feed RSS: ' . $stmt->error);
          }
          $stmt->close();
+         $smtm = null;
       }
 
       if (isset($_POST['atualizar_feed'])) {
@@ -97,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sinalizarAtualizacaoTV();
          }
          $stmt->close();
+         $smtm = null;
       }
 
       if (isset($_POST['atualizar_todos_feeds'])) {
@@ -128,6 +130,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
       sinalizarAtualizacaoTV();
    }
    $stmt->close();
+   $smtm = null;
 }
 $feeds = [];
 if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
@@ -144,8 +147,9 @@ if ($res) {
       $feeds[] = $row;
    }
 }
-if (isset($stmt)) {
+if (isset($stmt) && $smtm instanceof mysqli_stmt) {
    $stmt->close();
+   $smtm = null;
 }
 $canais = [];
 if (isset($_SESSION['nivel']) && $_SESSION['nivel'] === 'operador' && isset($_SESSION['codigo_canal']) && $_SESSION['codigo_canal'] !== 'TODOS') {
