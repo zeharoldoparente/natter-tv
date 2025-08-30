@@ -9,36 +9,26 @@ define('MAX_FILE_SIZE', 80 * 1024 * 1024);
 define('SIDEBAR_PATH', __DIR__ . '/../uploads/sidebar/');
 define('SIDEBAR_WEB_PATH', '../uploads/sidebar/');
 
-// Verificar se as constantes ainda não foram definidas
 if (!defined('SIDEBAR_PATH')) {
-   // Caminho físico para pasta de sidebar
    define('SIDEBAR_PATH', dirname(__DIR__) . '/sidebar/');
 }
 
 if (!defined('SIDEBAR_WEB_PATH')) {
-   // Caminho web para sidebar (relativo ao navegador)
    define('SIDEBAR_WEB_PATH', '../sidebar/');
 }
 
 if (!defined('MAX_FILE_SIZE')) {
-   // Tamanho máximo para upload (50MB)
    define('MAX_FILE_SIZE', 83886080);
 }
 
 if (!defined('UPLOAD_PATH')) {
-   // Caminho para uploads principais
    define('UPLOAD_PATH', dirname(__DIR__) . '/uploads/');
 }
 
 if (!defined('TEMP_PATH')) {
-   // Caminho para arquivos temporários
    define('TEMP_PATH', dirname(__DIR__) . '/temp/');
 }
 
-/**
- * Função auxiliar para determinar tipo de arquivo
- * Adicionar ao functions.php se não existir
- */
 if (!function_exists('getFileType')) {
    function getFileType($filename)
    {
@@ -56,11 +46,6 @@ if (!function_exists('getFileType')) {
       return 'desconhecido';
    }
 }
-
-/**
- * Função auxiliar para formatar tamanho de arquivo
- * Adicionar ao functions.php se não existir
- */
 if (!function_exists('formatFileSize')) {
    function formatFileSize($bytes)
    {
@@ -73,19 +58,11 @@ if (!function_exists('formatFileSize')) {
       return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
    }
 }
-
-/**
- * Criar pasta de sidebar se não existir
- */
 if (!is_dir(SIDEBAR_PATH)) {
    if (!mkdir(SIDEBAR_PATH, 0755, true)) {
       error_log("Erro: Não foi possível criar a pasta sidebar em " . SIDEBAR_PATH);
    }
 }
-
-/**
- * Criar arquivo .htaccess para proteção da pasta sidebar
- */
 $htaccess_content = "# Proteção para pasta sidebar
 <Files *.php>
     Deny from all

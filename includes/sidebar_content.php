@@ -1,18 +1,11 @@
 <?php
 
-/**
- * SUBSTITUIR o arquivo includes/sidebar_content.php por este código
- * Versão segura que funciona mesmo se o novo sistema não estiver instalado
- */
-
-// Verificar se a sidebar está habilitada (com fallback)
 $sidebarEnabled = true;
 try {
    if (function_exists('buscarConfiguracao')) {
       $sidebarEnabled = buscarConfiguracao('sidebar_enabled', true);
    }
 } catch (Exception $e) {
-   // Se der erro, continuar com sistema antigo
    $sidebarEnabled = true;
 }
 
@@ -20,29 +13,23 @@ if (!$sidebarEnabled) {
    echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
    return;
 }
-
-// Tentar buscar conteúdo lateral ativo no banco de dados
 $conteudoAtivo = null;
 $usingDatabase = false;
 
 try {
-   // Verificar se a tabela existe
    $tableCheck = $conn->query("SHOW TABLES LIKE 'conteudos_laterais'");
    if ($tableCheck && $tableCheck->num_rows > 0) {
-      // Tabela existe, tentar buscar conteúdo
       if (function_exists('buscarConteudoLateralAtivo')) {
          $conteudoAtivo = buscarConteudoLateralAtivo();
          $usingDatabase = true;
       }
    }
 } catch (Exception $e) {
-   // Se der erro, usar sistema antigo
    $conteudoAtivo = null;
    $usingDatabase = false;
 }
 
 if ($usingDatabase && $conteudoAtivo) {
-   // NOVO SISTEMA: Usar conteúdo do banco de dados
    $caminhoArquivo = SIDEBAR_PATH . $conteudoAtivo['arquivo'];
 
    if (file_exists($caminhoArquivo)) {
@@ -73,13 +60,11 @@ if ($usingDatabase && $conteudoAtivo) {
          }
       }
    } else {
-      // Arquivo não existe mais, usar sistema antigo como fallback
       $usingDatabase = false;
    }
 }
 
 if (!$usingDatabase) {
-   // SISTEMA ANTIGO: Buscar arquivos na pasta sidebar diretamente
    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
    $files = [];
 
@@ -128,7 +113,6 @@ if (!$usingDatabase) {
          }
       }
    } else {
-      // Nenhum conteúdo encontrado, exibir imagem padrão
       echo '<img src="../assets/images/propaganda.png" alt="Propaganda">';
    }
 }

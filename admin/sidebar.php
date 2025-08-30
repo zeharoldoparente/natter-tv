@@ -1,5 +1,4 @@
 <?php
-// sidebar.php - Nova página para gerenciar conteúdo lateral
 session_start();
 if (!isset($_SESSION['logado'])) {
    header("Location: index.php");
@@ -12,7 +11,6 @@ include "../includes/functions.php";
 $mensagem = '';
 $erro = '';
 
-// Processar ações
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    try {
       if (!verificarTokenCSRF($_POST['csrf_token'])) {
@@ -59,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    }
 }
 
-// Excluir conteúdo
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    try {
       $id = (int)$_GET['delete'];
@@ -72,8 +69,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
       $erro = $e->getMessage();
    }
 }
-
-// Buscar conteúdos laterais
 $conteudos = buscarConteudosLaterais();
 $conteudoAtivo = buscarConteudoLateralAtivo();
 ?>
@@ -349,7 +344,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
 
    <script src="../assets/js/admin.js"></script>
    <script>
-      // Editar descrição
       function editDescription(id, currentDescription) {
          document.getElementById('edit-content-id').value = id;
          document.getElementById('nova_descricao').value = currentDescription;
@@ -359,8 +353,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
       function closeDescriptionModal() {
          document.getElementById('edit-description-modal').classList.remove('visible');
       }
-
-      // Drag and drop para upload
       const dropZone = document.getElementById('dropZone');
       const fileInput = document.getElementById('arquivo');
 
@@ -400,8 +392,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
             showFilePreview(files[0]);
          }
       }
-
-      // Preview do arquivo
       fileInput.addEventListener('change', function(e) {
          if (e.target.files.length > 0) {
             showFilePreview(e.target.files[0]);
@@ -429,14 +419,10 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
                     </button>
                 </div>
             `;
-
-         // Remover preview anterior se existir
          const existingPreview = document.querySelector('.file-preview');
          if (existingPreview) {
             existingPreview.remove();
          }
-
-         // Adicionar novo preview após o drop-zone
          dropZone.parentNode.insertBefore(preview, dropZone.nextSibling);
       }
 
@@ -455,8 +441,6 @@ $conteudoAtivo = buscarConteudoLateralAtivo();
          const i = Math.floor(Math.log(bytes) / Math.log(k));
          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       }
-
-      // Adicionar estilo para linha ativa
       const style = document.createElement('style');
       style.textContent = `
             .active-row {

@@ -27,7 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arquivo'])) {
 
       $conteudoId = processarUpload($_FILES['arquivo'], $duracao, $codigo_canal);
       if ($conteudoId) {
-         $mensagem = "Arquivo enviado com sucesso para o canal {$codigo_canal}!";
+         $stmt = $conn->prepare("SELECT tipo, duracao FROM conteudos WHERE id = ?");
+         $stmt->bind_param("i", $conteudoId);
+         $stmt->execute();
+         $conteudo_info = $stmt->get_result()->fetch_assoc();
+         $stmt->close();
+
+         $duracao_formatada = formatarDuracao($conteudo_info['duracao'], $conteudo_info['tipo']);
+         $tipo_texto = $conteudo_info['tipo'] === 'video' ? 'vídeo' : 'imagem';
+
+         $mensagem = "Arquivo enviado com sucesso para o canal {$codigo_canal}! Duração: {$duracao_formatada} ({$tipo_texto})";
          sinalizarAtualizacaoTV();
       }
    } catch (Exception $e) {
@@ -170,6 +179,7 @@ try {
                            <h5 id="fileName"></h5>
                            <p id="fileSize"></p>
                            <p id="fileType"></p>
+                           <p id="fileDuration" class="file-duration hidden"></p>
                         </div>
                         <button type="button" class="btn-remove-file" onclick="removeFile()">
                            <i class="fas fa-times"></i>
@@ -183,7 +193,7 @@ try {
                         Duração da Exibição (segundos)
                      </label>
                      <input type="number" name="duracao" id="duracao" value="5" min="1" max="300">
-                     <small>Apenas para imagens. Vídeos usam duração natural.</small>
+                     <small id="durationHelp">Apenas para imagens. Vídeos usam duração natural.</small>
                   </div>
 
                   <div class="form-actions">
@@ -226,7 +236,7 @@ try {
                      <i class="fas fa-image text-info"></i>
                      <div>
                         <h5>Imagens</h5>
-                        <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s)</p>
+                        <p>JPG, PNG, GIF - Defina o tempo de exibição em segundos (1-300s). Aparecerá como 00:05 para 5 segundos.</p>
                      </div>
                   </div>
 
@@ -234,7 +244,7 @@ try {
                      <i class="fas fa-video text-warning"></i>
                      <div>
                         <h5>Vídeos</h5>
-                        <p>MP4, AVI, MOV - Serão reproduzidos por completo automaticamente</p>
+                        <p>MP4, AVI, MOV - A duração real será detectada automaticamente e exibida como 5:30 para 5min30s.</p>
                      </div>
                   </div>
 
@@ -264,7 +274,131 @@ try {
       document.getElementById('codigo_canal').addEventListener('input', function(e) {
          this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       });
+
+      const originalHandleFileSelect = window.handleFileSelect;
+
+      window.handleFileSelect = function(e) {
+         const file = e.target.files[0];
+
+         if (!file) {
+            hideFilePreview();
+            return;
+         }
+
+         if (!validateFile(file)) {
+            return;
+         }
+
+         showFilePreview(file);
+         adjustFormFields(file);
+
+         if (file.type.startsWith('video/')) {
+            detectVideoDuration(file);
+         }
+      };
+
+      function detectVideoDuration(file) {
+         const fileDurationElement = document.getElementById('fileDuration');
+         const durationHelp = document.getElementById('durationHelp');
+
+         const video = document.createElement('video');
+         video.preload = 'metadata';
+
+         video.onloadedmetadata = function() {
+            const duration = Math.round(video.duration);
+            const formattedDuration = formatDuration(duration, 'video');
+
+            fileDurationElement.innerHTML = `<i class="fas fa-clock" style="color: var(--warning-color);"></i> Duração detectada: <strong>${formattedDuration}</strong>`;
+            fileDurationElement.classList.remove('hidden');
+
+            durationHelp.innerHTML = `<span style="color: var(--warning-color);">🎬 Vídeo detectado - duração será ${formattedDuration}</span>`;
+
+            URL.revokeObjectURL(video.src);
+         };
+
+         video.onerror = function() {
+            fileDurationElement.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> Não foi possível detectar a duração do vídeo`;
+            fileDurationElement.classList.remove('hidden');
+
+            URL.revokeObjectURL(video.src);
+         };
+
+         video.src = URL.createObjectURL(file);
+      }
+
+      function formatDuration(seconds, type) {
+         if (type === 'imagem') {
+            return String(seconds).padStart(2, '0') + ':00';
+         }
+
+         const minutes = Math.floor(seconds / 60);
+         const remainingSeconds = seconds % 60;
+         return minutes + ':' + String(remainingSeconds).padStart(2, '0');
+      }
+
+      const originalRemoveFile = window.removeFile;
+
+      window.removeFile = function() {
+         if (originalRemoveFile) {
+            originalRemoveFile();
+         }
+
+         const fileDurationElement = document.getElementById('fileDuration');
+         const durationHelp = document.getElementById('durationHelp');
+
+         fileDurationElement.classList.add('hidden');
+         durationHelp.innerHTML = 'Apenas para imagens. Vídeos usam duração natural.';
+      };
    </script>
+
+   <style>
+      .file-duration {
+         padding: 8px 12px;
+         background: rgba(243, 156, 18, 0.1);
+         border-radius: 6px;
+         border-left: 3px solid var(--warning-color);
+         font-weight: 500;
+         color: var(--warning-color);
+         margin-top: 5px;
+      }
+
+      .file-duration i {
+         margin-right: 6px;
+      }
+
+      .form-group small {
+         transition: color 0.3s ease;
+      }
+
+      .duration-info {
+         display: flex;
+         align-items: center;
+         gap: 10px;
+         margin-top: 10px;
+         padding: 8px 12px;
+         background: #f8f9fa;
+         border-radius: 6px;
+         border-left: 3px solid var(--info-color);
+      }
+
+      .duration-info i {
+         color: var(--info-color);
+      }
+
+      #durationGroup {
+         transition: opacity 0.3s ease;
+      }
+
+      #durationGroup.disabled {
+         opacity: 0.5;
+      }
+
+      #duracao:disabled {
+         background-color: #f8f9fa;
+         color: #6c757d;
+         cursor: not-allowed;
+      }
+   </style>
 </body>
 
 </html>

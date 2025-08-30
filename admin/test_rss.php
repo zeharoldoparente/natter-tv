@@ -15,7 +15,6 @@ try {
       throw new Exception('URL inválida');
    }
 
-   // Configurar contexto para requisição
    $context = stream_context_create([
       'http' => [
          'timeout' => 15,
@@ -28,7 +27,6 @@ try {
       ]
    ]);
 
-   // Tentar acessar o feed
    $rss_content = @file_get_contents($url, false, $context);
 
    if ($rss_content === false) {
@@ -40,7 +38,6 @@ try {
       throw new Exception('Feed retornou conteúdo vazio');
    }
 
-   // Tentar fazer parse do XML
    $prev_setting = libxml_use_internal_errors(true);
    libxml_clear_errors();
 
@@ -57,7 +54,6 @@ try {
 
    libxml_use_internal_errors($prev_setting);
 
-   // Analisar estrutura do feed
    $feed_info = [
       'tipo' => 'desconhecido',
       'titulo' => '',
@@ -66,9 +62,7 @@ try {
       'itens_amostra' => []
    ];
 
-   // Detectar tipo de feed
    if (isset($xml->channel)) {
-      // RSS 2.0
       $feed_info['tipo'] = 'RSS 2.0';
       $feed_info['titulo'] = (string)$xml->channel->title;
       $feed_info['descricao'] = (string)$xml->channel->description;
@@ -76,7 +70,6 @@ try {
       $items = $xml->channel->item;
       $feed_info['total_itens'] = count($items);
 
-      // Pegar primeiros 3 itens como amostra
       $contador = 0;
       foreach ($items as $item) {
          if ($contador >= 3) break;
@@ -90,7 +83,6 @@ try {
          $contador++;
       }
    } elseif (isset($xml->entry)) {
-      // Atom
       $feed_info['tipo'] = 'Atom';
       $feed_info['titulo'] = (string)$xml->title;
       $feed_info['descricao'] = (string)$xml->subtitle;
@@ -98,7 +90,6 @@ try {
       $items = $xml->entry;
       $feed_info['total_itens'] = count($items);
 
-      // Pegar primeiros 3 itens como amostra
       $contador = 0;
       foreach ($items as $item) {
          if ($contador >= 3) break;
@@ -118,7 +109,6 @@ try {
       throw new Exception('Formato de feed não reconhecido (não é RSS nem Atom)');
    }
 
-   // Validações adicionais
    if (empty($feed_info['titulo'])) {
       throw new Exception('Feed não possui título válido');
    }
@@ -127,7 +117,6 @@ try {
       throw new Exception('Feed não contém itens');
    }
 
-   // Sucesso
    echo json_encode([
       'success' => true,
       'message' => 'Feed RSS válido e acessível',

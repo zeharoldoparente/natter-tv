@@ -57,8 +57,6 @@ if (empty($conteudos)) {
 <body>
    <div id="conteudo-principal">
       <div id="media-container"></div>
-
-      <!-- RSS Container Topo -->
       <div id="rss-topo" class="rss-container topo hidden">
          <div class="rss-ticker" id="rss-ticker-topo"></div>
       </div>
@@ -83,7 +81,6 @@ if (empty($conteudos)) {
          <div class="rodape-logo">
             <img src="../assets/images/tt Logo.png" alt="Logo">
          </div>
-         <!-- RSS Container Rodapé -->
          <div id="rss-rodape" class="rss-container rodape hidden">
             <div class="rss-ticker" id="rss-ticker-rodape"></div>
          </div>
@@ -114,7 +111,7 @@ if (empty($conteudos)) {
    <script>
       const CONFIG = {
          updateInterval: 30000,
-         rssUpdateInterval: 300000, // 5 minutos
+         rssUpdateInterval: 300000,
          showOverlay: false,
          fadeTransition: true,
          debug: false,
@@ -141,8 +138,6 @@ if (empty($conteudos)) {
 
          updateDateTime();
          setInterval(updateDateTime, 1000);
-
-         // Inicializar RSS imediatamente
          initializeRSS();
 
          if (conteudos.length === 0 || conteudos[0].id === 0) {
@@ -158,10 +153,7 @@ if (empty($conteudos)) {
       }
 
       function initializeRSS() {
-         // Carregar RSS imediatamente ao inicializar
          updateRSSContent();
-
-         // Configurar atualização periódica
          if (rssTimer) {
             clearInterval(rssTimer);
          }
@@ -195,7 +187,6 @@ if (empty($conteudos)) {
       }
 
       function setupRSSTickers() {
-         // Configurar RSS do rodapé
          if (rssData.rodape && rssData.rodape.length > 0) {
             const rodapeContainer = document.getElementById('rss-rodape');
             const rodapeTicker = document.getElementById('rss-ticker-rodape');
@@ -205,8 +196,6 @@ if (empty($conteudos)) {
          } else {
             document.getElementById('rss-rodape').classList.add('hidden');
          }
-
-         // Configurar RSS do topo
          if (rssData.topo && rssData.topo.length > 0) {
             const topoContainer = document.getElementById('rss-topo');
             const topoTicker = document.getElementById('rss-ticker-topo');
@@ -220,34 +209,21 @@ if (empty($conteudos)) {
 
       function setupRSSPosition(items, ticker, container) {
          if (!items || items.length === 0) return;
-
-         // Usar configuração do primeiro item
          const config = items[0].configuracao;
-
-         // Aplicar cores
          container.style.backgroundColor = config.cor_fundo;
          container.style.color = config.cor_texto;
-
-         // Criar conteúdo HTML com separadores limpos
          let tickerHTML = '';
          items.forEach((item) => {
-            // Adicionar apenas o texto da notícia, sem o nome do feed
             tickerHTML += `<span class="rss-item">${escapeHtml(item.texto)}</span>`;
          });
-
-         // Duplicar o conteúdo para criar loop contínuo
          tickerHTML = tickerHTML + tickerHTML;
 
          ticker.innerHTML = tickerHTML;
-
-         // CORREÇÃO DA VELOCIDADE: Limpar animações anteriores
          ticker.style.animation = 'none';
          ticker.style.transform = 'translateX(0)';
-
-         // Aguardar o DOM atualizar para calcular larguras
          setTimeout(() => {
             const fullWidth = ticker.scrollWidth;
-            const contentWidth = fullWidth / 2; // largura original antes da duplicação
+            const contentWidth = fullWidth / 2;
             const containerWidth = container.offsetWidth;
 
             if (contentWidth <= containerWidth) {
@@ -256,23 +232,14 @@ if (empty($conteudos)) {
                return;
             }
 
-            // CORREÇÃO: Forçar recálculo e aplicar nova animação
-            ticker.offsetHeight; // Força reflow
-
-            // Calcular duração baseada na velocidade configurada (px/s)
-            const velocidade = Math.max(config.velocidade_scroll, 10); // Mínimo 10px/s
+            ticker.offsetHeight;
+            const velocidade = Math.max(config.velocidade_scroll, 10);
             const duration = contentWidth / velocidade;
-
-            // CORREÇÃO: Criar animação única para cada ticker
             const animationName = `scroll-horizontal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-            // Remover animação anterior se existir
             const existingStyle = document.getElementById(`rss-animation-${container.id}`);
             if (existingStyle) {
                existingStyle.remove();
             }
-
-            // Criar nova animação CSS
             const style = document.createElement('style');
             style.id = `rss-animation-${container.id}`;
             style.textContent = `
@@ -286,8 +253,6 @@ if (empty($conteudos)) {
                }
             `;
             document.head.appendChild(style);
-
-            // Aplicar nova animação
             ticker.style.animation = `${animationName} ${duration}s linear infinite`;
 
             log(`RSS configurado: ${items.length} itens, velocidade: ${velocidade}px/s, duração: ${duration.toFixed(2)}s, largura: ${contentWidth}px`);

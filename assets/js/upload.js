@@ -7,9 +7,14 @@ function initializeUpload() {
    const fileInput = document.getElementById("arquivo");
    const uploadForm = document.getElementById("uploadForm");
    const tipoConteudo = document.getElementById("tipo_conteudo");
+
    setupDragAndDrop(dropZone, fileInput);
-   tipoConteudo.addEventListener("change", toggleFields);
-   toggleFields();
+
+   if (tipoConteudo) {
+      tipoConteudo.addEventListener("change", toggleFields);
+      toggleFields();
+   }
+
    fileInput.addEventListener("change", handleFileSelect);
    uploadForm.addEventListener("submit", handleFormSubmit);
 }
@@ -19,6 +24,7 @@ function setupDragAndDrop(dropZone, fileInput) {
       dropZone.addEventListener(eventName, preventDefaults, false);
       document.body.addEventListener(eventName, preventDefaults, false);
    });
+
    ["dragenter", "dragover"].forEach((eventName) => {
       dropZone.addEventListener(eventName, highlight, false);
    });
@@ -26,6 +32,7 @@ function setupDragAndDrop(dropZone, fileInput) {
    ["dragleave", "drop"].forEach((eventName) => {
       dropZone.addEventListener(eventName, unhighlight, false);
    });
+
    dropZone.addEventListener("drop", handleDrop, false);
 
    function preventDefaults(e) {
@@ -59,11 +66,19 @@ function handleFileSelect(e) {
       hideFilePreview();
       return;
    }
+
    if (!validateFile(file)) {
       return;
    }
+
    showFilePreview(file);
    adjustFormFields(file);
+
+   if (file.type.startsWith("video/")) {
+      detectVideoDuration(file);
+   } else {
+      hideVideoDurationInfo();
+   }
 }
 
 function validateFile(file) {
@@ -80,7 +95,7 @@ function validateFile(file) {
    ];
 
    if (file.size > maxSize) {
-      showAlert("Arquivo muito grande! Máximo permitido: 50MB", "error");
+      showAlert("Arquivo muito grande! Máximo permitido: 80MB", "error");
       resetFileInput();
       return false;
    }
@@ -118,7 +133,7 @@ function showFilePreview(file) {
          mediaElement = document.createElement("video");
          mediaElement.src = e.target.result;
          mediaElement.controls = true;
-         mediaElement.muted = false;
+         mediaElement.muted = true;
       }
 
       if (mediaElement) {
@@ -136,26 +151,28 @@ function hideFilePreview() {
 }
 
 function toggleFields() {
-   const tipo = document.getElementById("tipo_conteudo").value;
+   const tipo = document.getElementById("tipo_conteudo")?.value;
    const canalGroup = document.getElementById("canalGroup");
    const codigoInput = document.getElementById("codigo_canal");
    const durationGroup = document.getElementById("durationGroup");
+
    if (tipo === "lateral") {
-      canalGroup.style.display = "none";
-      durationGroup.style.display = "none";
-      codigoInput.removeAttribute("required");
+      if (canalGroup) canalGroup.style.display = "none";
+      if (durationGroup) durationGroup.style.display = "none";
+      if (codigoInput) codigoInput.removeAttribute("required");
    } else {
-      canalGroup.style.display = "block";
-      durationGroup.style.display = "flex";
-      codigoInput.setAttribute("required", "required");
+      if (canalGroup) canalGroup.style.display = "block";
+      if (durationGroup) durationGroup.style.display = "flex";
+      if (codigoInput) codigoInput.setAttribute("required", "required");
    }
 }
 
 function adjustFormFields(file) {
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
+   const durationHelp = document.getElementById("durationHelp");
 
-   const tipo = document.getElementById("tipo_conteudo").value;
+   const tipo = document.getElementById("tipo_conteudo")?.value;
    if (tipo === "lateral") {
       durationGroup.style.display = "none";
       durationInput.value = 0;
@@ -165,23 +182,88 @@ function adjustFormFields(file) {
    }
 
    if (file.type.startsWith("video/")) {
-      durationGroup.style.display = "none";
+      durationGroup.classList.add("disabled");
       durationInput.value = 0;
       durationInput.removeAttribute("required");
       durationInput.disabled = true;
+      durationHelp.innerHTML =
+         '<span style="color: var(--warning-color);"><i class="fas fa-video"></i> Vídeo detectado - duração será calculada automaticamente</span>';
    } else {
-      durationGroup.style.display = "flex";
+      durationGroup.classList.remove("disabled");
       durationInput.disabled = false;
+      durationInput.setAttribute("required", "required");
       if (durationInput.value == 0) {
          durationInput.value = 5;
       }
+      durationHelp.innerHTML =
+         '<i class="fas fa-image"></i> Defina quantos segundos a imagem ficará na tela';
    }
+}
+
+function detectVideoDuration(file) {
+   const fileDurationElement = document.getElementById("fileDuration");
+
+   if (!fileDurationElement) return;
+
+   fileDurationElement.innerHTML =
+      '<i class="fas fa-spinner fa-spin" style="color: var(--warning-color);"></i> Detectando duração do vídeo...';
+   fileDurationElement.classList.remove("hidden");
+
+   const video = document.createElement("video");
+   video.preload = "metadata";
+
+   video.onloadedmetadata = function () {
+      const duration = Math.round(video.duration);
+      const formattedDuration = formatDurationDisplay(duration, "video");
+
+      fileDurationElement.innerHTML = `
+         <i class="fas fa-clock" style="color: var(--warning-color);"></i> 
+         Duração detectada: <strong style="color: var(--warning-color);">${formattedDuration}</strong>
+         <small style="display: block; margin-top: 4px; color: #666;">
+            (${duration} segundos total)
+         </small>
+      `;
+
+      URL.revokeObjectURL(video.src);
+   };
+
+   video.onerror = function () {
+      fileDurationElement.innerHTML = `
+         <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> 
+         Não foi possível detectar a duração
+         <small style="display: block; margin-top: 4px; color: #666;">
+            A duração será detectada no servidor
+         </small>
+      `;
+
+      URL.revokeObjectURL(video.src);
+   };
+
+   video.src = URL.createObjectURL(file);
+}
+
+function hideVideoDurationInfo() {
+   const fileDurationElement = document.getElementById("fileDuration");
+   if (fileDurationElement) {
+      fileDurationElement.classList.add("hidden");
+   }
+}
+
+function formatDurationDisplay(seconds, type) {
+   if (type === "imagem") {
+      return `00:${String(seconds).padStart(2, "0")}`;
+   }
+
+   const minutes = Math.floor(seconds / 60);
+   const remainingSeconds = seconds % 60;
+   return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 function handleFormSubmit(e) {
    e.preventDefault();
 
    const fileInput = document.getElementById("arquivo");
+   const codigoCanalInput = document.getElementById("codigo_canal");
    const submitBtn = document.getElementById("submitBtn");
    const progressContainer = document.getElementById("progressContainer");
 
@@ -190,7 +272,14 @@ function handleFormSubmit(e) {
       return;
    }
 
+   if (codigoCanalInput && !codigoCanalInput.value.trim()) {
+      showAlert("Por favor, digite o código do canal", "error");
+      codigoCanalInput.focus();
+      return;
+   }
+
    const formData = new FormData(e.target);
+
    submitBtn.disabled = true;
    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
    progressContainer.classList.remove("hidden");
@@ -214,7 +303,6 @@ function handleFormSubmit(e) {
       } else {
          showAlert("Erro ao enviar arquivo", "error");
       }
-
       resetUploadState();
    });
 
@@ -239,7 +327,6 @@ function resetUploadState() {
    const submitBtn = document.getElementById("submitBtn");
    const progressContainer = document.getElementById("progressContainer");
 
-   submitBtn.disabled = false;
    submitBtn.innerHTML = '<i class="fas fa-upload"></i> Enviar Arquivo';
    progressContainer.classList.add("hidden");
 
@@ -249,13 +336,27 @@ function resetUploadState() {
 function removeFile() {
    resetFileInput();
    hideFilePreview();
+   hideVideoDurationInfo();
 
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
+   const durationHelp = document.getElementById("durationHelp");
 
-   durationGroup.style.display = "flex";
-   durationInput.disabled = false;
-   durationInput.value = 5;
+   if (durationGroup) {
+      durationGroup.style.display = "flex";
+      durationGroup.classList.remove("disabled");
+   }
+
+   if (durationInput) {
+      durationInput.disabled = false;
+      durationInput.setAttribute("required", "required");
+      durationInput.value = 5;
+   }
+
+   if (durationHelp) {
+      durationHelp.innerHTML =
+         "Apenas para imagens. Vídeos usam duração natural.";
+   }
 }
 
 function resetFileInput() {
@@ -266,14 +367,28 @@ function resetFileInput() {
 function resetForm() {
    document.getElementById("uploadForm").reset();
    hideFilePreview();
+   hideVideoDurationInfo();
    resetFileInput();
 
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
+   const durationHelp = document.getElementById("durationHelp");
 
-   durationGroup.style.display = "flex";
-   durationInput.disabled = false;
-   durationInput.value = 5;
+   if (durationGroup) {
+      durationGroup.style.display = "flex";
+      durationGroup.classList.remove("disabled");
+   }
+
+   if (durationInput) {
+      durationInput.disabled = false;
+      durationInput.setAttribute("required", "required");
+      durationInput.value = 5;
+   }
+
+   if (durationHelp) {
+      durationHelp.innerHTML =
+         "Apenas para imagens. Vídeos usam duração natural.";
+   }
 }
 
 function showAlert(message, type = "info") {
@@ -327,6 +442,101 @@ function getFileTypeLabel(mimeType) {
    return "Arquivo";
 }
 
+function formatDurationDisplay(seconds, type) {
+   if (type === "imagem" || type === "image") {
+      return `00:${String(seconds).padStart(2, "0")}`;
+   }
+
+   const hours = Math.floor(seconds / 3600);
+   const minutes = Math.floor((seconds % 3600) / 60);
+   const remainingSeconds = seconds % 60;
+
+   if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, "0")}:${String(
+         remainingSeconds
+      ).padStart(2, "0")}`;
+   } else {
+      return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+   }
+}
+
+function detectVideoDuration(file) {
+   const fileDurationElement = document.getElementById("fileDuration");
+   const durationHelp = document.getElementById("durationHelp");
+
+   if (!fileDurationElement) return;
+
+   fileDurationElement.innerHTML = `
+      <i class="fas fa-spinner fa-spin" style="color: var(--warning-color);"></i> 
+      Analisando vídeo...
+   `;
+   fileDurationElement.classList.remove("hidden");
+
+   const video = document.createElement("video");
+   video.preload = "metadata";
+   video.muted = true;
+
+   video.onloadedmetadata = function () {
+      const duration = Math.round(video.duration);
+
+      if (duration > 0) {
+         const formattedDuration = formatDurationDisplay(duration, "video");
+
+         fileDurationElement.innerHTML = `
+            <i class="fas fa-video" style="color: var(--warning-color);"></i> 
+            <strong style="color: var(--warning-color);">${formattedDuration}</strong>
+            <small style="display: block; margin-top: 4px; color: #666; font-size: 0.8rem;">
+               Duração detectada: ${duration} segundos
+            </small>
+         `;
+
+         if (durationHelp) {
+            durationHelp.innerHTML = `
+               <span style="color: var(--warning-color);">
+                  <i class="fas fa-video"></i> Vídeo detectado - será exibido por ${formattedDuration}
+               </span>
+            `;
+         }
+      } else {
+         fileDurationElement.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> 
+            Duração não detectada
+            <small style="display: block; margin-top: 4px; color: #666; font-size: 0.8rem;">
+               Será calculada no servidor durante o upload
+            </small>
+         `;
+      }
+
+      URL.revokeObjectURL(video.src);
+   };
+
+   video.onerror = function () {
+      fileDurationElement.innerHTML = `
+         <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i> 
+         Erro ao analisar vídeo
+         <small style="display: block; margin-top: 4px; color: #666; font-size: 0.8rem;">
+            A duração será detectada durante o upload
+         </small>
+      `;
+      URL.revokeObjectURL(video.src);
+   };
+
+   video.src = URL.createObjectURL(file);
+}
+
+function hideVideoDurationInfo() {
+   const fileDurationElement = document.getElementById("fileDuration");
+   const durationHelp = document.getElementById("durationHelp");
+
+   if (fileDurationElement) {
+      fileDurationElement.classList.add("hidden");
+   }
+
+   if (durationHelp) {
+      durationHelp.innerHTML =
+         "Apenas para imagens. Vídeos usam duração natural.";
+   }
+}
 const additionalCSS = `
 .alert-dynamic {
     position: relative;
@@ -350,6 +560,32 @@ const additionalCSS = `
     opacity: 1;
 }
 
+.file-duration {
+    padding: 10px 15px;
+    background: rgba(243, 156, 18, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid var(--warning-color);
+    font-weight: 500;
+    color: var(--warning-color);
+    margin-top: 8px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    animation: slideDown 0.3s ease-out;
+}
+
+.file-duration i {
+    margin-right: 8px;
+}
+
+.form-group.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.form-group.disabled label {
+    color: #999 !important;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -360,7 +596,21 @@ const additionalCSS = `
         transform: translateY(0);
     }
 }
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.detecting-duration {
+    animation: pulse 1.5s infinite;
+}
 `;
 
 const style = document.createElement("style");
-style.textContent = additionalCS;
+style.textContent = additionalCSS;
+document.head.appendChild(style);

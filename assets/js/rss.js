@@ -1,11 +1,7 @@
-/**
- * Sistema de gerenciamento RSS para NatterTV
- */
-
 class RSSManager {
    constructor(canal) {
       this.canal = canal;
-      this.updateInterval = 300000; // 5 minutos
+      this.updateInterval = 300000;
       this.timer = null;
       this.data = { rodape: [], topo: [] };
       this.debug = false;
@@ -86,20 +82,11 @@ class RSSManager {
          return;
       }
 
-      // Usar configuração do primeiro item
       const config = items[0].configuracao;
-
-      // Aplicar estilos do container
       this.applyContainerStyles(container, config);
-
-      // Gerar HTML do ticker e duplicar conteúdo para loop contínuo
       const tickerHTML = this.generateTickerHTML(items);
       ticker.innerHTML = tickerHTML + tickerHTML;
-
-      // Configurar animação
       this.setupAnimation(ticker, container, config);
-
-      // Mostrar container
       container.classList.remove("hidden");
 
       this.log(`RSS renderizado para ${position}: ${items.length} itens`);
@@ -130,24 +117,19 @@ class RSSManager {
    }
 
    setupAnimation(ticker, container, config) {
-      // Aguardar renderização
       setTimeout(() => {
          const fullWidth = ticker.scrollWidth;
-         const contentWidth = fullWidth / 2; // largura original antes da duplicação
+         const contentWidth = fullWidth / 2;
          const containerWidth = container.offsetWidth;
 
          if (contentWidth <= containerWidth) {
-            // Conteúdo cabe na tela, não precisa de animação
             ticker.style.animation = "none";
             ticker.style.transform = "none";
             return;
          }
 
-         // Calcular duração baseada na velocidade
          const totalDistance = tickerWidth + containerWidth;
          const duration = contentWidth / config.velocidade_scroll;
-
-         // Aplicar animação
          ticker.style.animationDuration = duration + "s";
          ticker.style.animationName = "scroll-horizontal";
          ticker.style.animationTimingFunction = "linear";
@@ -160,7 +142,6 @@ class RSSManager {
    }
 
    adjustColorOpacity(color, opacity) {
-      // Converter cor hex para rgba
       const hex = color.replace("#", "");
       const r = parseInt(hex.substr(0, 2), 16);
       const g = parseInt(hex.substr(2, 2), 16);
@@ -176,7 +157,6 @@ class RSSManager {
       return div.innerHTML;
    }
 
-   // Métodos de controle
    pause() {
       if (this.timer) {
          clearInterval(this.timer);
@@ -202,7 +182,6 @@ class RSSManager {
       this.log("Debug " + (enabled ? "ativado" : "desativado"));
    }
 
-   // Método para ajustar velocidade em tempo real
    setSpeed(position, speed) {
       const ticker = document.getElementById(`rss-ticker-${position}`);
       if (!ticker) return;
@@ -215,7 +194,6 @@ class RSSManager {
       this.log(`Velocidade alterada para ${position}: ${speed}px/s`);
    }
 
-   // Método para alterar cores em tempo real
    setColors(position, textColor, backgroundColor) {
       const container = document.getElementById(`rss-${position}`);
       if (!container) return;
@@ -229,7 +207,6 @@ class RSSManager {
       );
    }
 
-   // Método para obter estatísticas
    getStats() {
       return {
          canal: this.canal,
@@ -249,14 +226,12 @@ class RSSManager {
       }
    }
 
-   // Cleanup
    destroy() {
       if (this.timer) {
          clearInterval(this.timer);
          this.timer = null;
       }
 
-      // Ocultar containers
       ["rodape", "topo"].forEach((position) => {
          const container = document.getElementById(`rss-${position}`);
          if (container) {
@@ -268,9 +243,7 @@ class RSSManager {
    }
 }
 
-// Funções utilitárias globais para RSS
 window.RSSUtils = {
-   // Validar URL de feed RSS
    validateFeedURL: function (url) {
       try {
          new URL(url);
@@ -285,7 +258,6 @@ window.RSSUtils = {
       }
    },
 
-   // Formatar texto para exibição
    formatDisplayText: function (title, description, maxLength = 200) {
       let text = title;
 
@@ -300,7 +272,6 @@ window.RSSUtils = {
       return text;
    },
 
-   // Testar conectividade com feed
    testFeed: async function (url) {
       try {
          const response = await fetch(
@@ -313,15 +284,11 @@ window.RSSUtils = {
       }
    },
 
-   // Calcular velocidade ótima baseada no conteúdo
    calculateOptimalSpeed: function (textLength, containerWidth) {
-      // Velocidade base: 50px/s
-      // Ajustar baseado no comprimento do texto
       const baseSpeed = 50;
       const adjustment = Math.min(textLength / 1000, 0.5);
       return Math.round(baseSpeed * (1 + adjustment));
    },
 };
 
-// Exportar para uso global
 window.RSSManager = RSSManager;

@@ -1,4 +1,4 @@
-@import url('base.css');
+@import url("base.css");
 
 :root {
    --sidebar-width: 250px;
@@ -324,6 +324,51 @@ body {
    border-radius: 4px;
    border: 2px solid #ddd;
 }
+
+.duration-cell {
+   font-family: "Courier New", monospace;
+   font-weight: 600;
+   font-size: 0.95rem;
+   color: #2c3e50;
+   text-align: center;
+   min-width: 70px;
+   position: relative;
+}
+
+.duration-cell[data-type="video"] {
+   color: var(--warning-color);
+   background: rgba(243, 156, 18, 0.1);
+   padding: 4px 8px;
+   border-radius: 4px;
+}
+
+.duration-cell[data-type="video"]:before {
+   content: "▶";
+   font-size: 0.8rem;
+   margin-right: 4px;
+   opacity: 0.7;
+}
+
+.duration-cell[data-type="imagem"] {
+   color: var(--info-color);
+   background: rgba(52, 152, 219, 0.1);
+   padding: 4px 8px;
+   border-radius: 4px;
+}
+
+.duration-cell[data-type="imagem"]:before {
+   content: "🖼";
+   font-size: 0.8rem;
+   margin-right: 4px;
+   opacity: 0.7;
+}
+
+.duration-cell:hover {
+   background-color: rgba(0, 0, 0, 0.05);
+   transform: scale(1.05);
+   transition: all 0.2s ease;
+}
+
 .sidebar-preview {
    text-align: center;
    margin-bottom: 15px;
@@ -483,7 +528,6 @@ body {
       transform: translate(-50%, -50%) rotate(360deg);
    }
 }
-/* =============== Shared Components =============== */
 .stat-card {
    background: white;
    padding: 20px;
@@ -552,8 +596,6 @@ body {
 #canal_filter {
    text-transform: uppercase !important;
 }
-
-/* =============== Dashboard Page =============== */
 .stats-overview {
    display: grid;
    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -684,7 +726,6 @@ body {
    background: rgba(255, 255, 255, 0.3);
 }
 
-/* =============== Upload Page =============== */
 .channels-stats {
    display: grid;
    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -893,7 +934,6 @@ body {
    font-size: 0.9rem;
 }
 
-/* =============== RSS Page =============== */
 .rss-form .form-row {
    display: grid;
    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -958,11 +998,6 @@ body {
    cursor: pointer;
    font-size: 1.5rem;
 }
-/* 
-Adicionar estes estilos ao final do arquivo admin-style.css 
-*/
-
-/* =============== SIDEBAR MANAGEMENT STYLES =============== */
 
 .current-sidebar-content {
    display: flex;
@@ -1016,7 +1051,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    opacity: 0.5;
 }
 
-/* Active row highlighting */
 .active-row {
    background-color: #e8f5e8 !important;
    border-left: 4px solid var(--success-color) !important;
@@ -1026,7 +1060,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    background-color: #d4edda !important;
 }
 
-/* Description cell styles */
 .description-cell {
    max-width: 200px;
    position: relative;
@@ -1050,7 +1083,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    opacity: 1;
 }
 
-/* File preview styles */
 .file-preview {
    margin-top: 15px;
    border: 2px solid #e1e8ed;
@@ -1110,7 +1142,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    transform: scale(1.1);
 }
 
-/* Drag and drop enhancements for sidebar */
 .drop-zone.dragover {
    border-color: var(--success-color);
    background: rgba(39, 174, 96, 0.05);
@@ -1120,7 +1151,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    color: var(--success-color);
 }
 
-/* Status badges for sidebar content */
 .badge.badge-active {
    background: var(--success-color);
    color: white;
@@ -1134,7 +1164,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    color: white;
 }
 
-/* Sidebar management specific table styles */
 .content-table .preview-cell {
    width: 100px;
    text-align: center;
@@ -1156,7 +1185,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    border-color: var(--primary-color);
 }
 
-/* Modal enhancements */
 .modal.visible {
    display: flex;
    animation: fadeIn 0.3s ease-out;
@@ -1183,7 +1211,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    color: var(--danger-color);
 }
 
-/* Responsive adjustments for sidebar management */
 @media (max-width: 768px) {
    .current-sidebar-content {
       flex-direction: column;
@@ -1204,7 +1231,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    }
 }
 
-/* Animation for new elements */
 @keyframes slideDown {
    from {
       opacity: 0;
@@ -1216,7 +1242,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    }
 }
 
-/* Loading states for sidebar actions */
 .btn.loading-sidebar {
    position: relative;
    color: transparent;
@@ -1236,7 +1261,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    animation: spin 1s linear infinite;
 }
 
-/* Enhanced form styling for sidebar uploads */
 .upload-form .form-group textarea {
    min-height: 80px;
    resize: vertical;
@@ -1248,7 +1272,6 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    transform: scale(1.2);
 }
 
-/* Success indicators */
 .sidebar-success-indicator {
    position: fixed;
    top: 20px;
@@ -1273,13 +1296,10 @@ Adicionar estes estilos ao final do arquivo admin-style.css
    }
 }
 
-/* Icon improvements */
 .fas.fa-rectangle-wide {
-   /* Fallback para ícone de sidebar */
    font-family: "Font Awesome 6 Free";
 }
 
-/* Se o ícone não existir, usar alternativo */
 .sidebar-menu a[href="sidebar.php"] i:before {
-   content: "\f00a"; /* fa-th-large como alternativa */
+   content: "\f00a";
 }

@@ -11,7 +11,6 @@ include "../includes/rss_functions.php";
 $mensagem = '';
 $erro = '';
 
-// Processar ações
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    try {
       if (!verificarTokenCSRF($_POST['csrf_token'])) {
@@ -39,8 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $codigo_canal = 'TODOS';
          }
 
-         // CORREÇÃO: Buscar o usuario_id da sessão
-         $usuario_id = $_SESSION['usuario_id'] ?? 1; // Usar 1 como fallback se não houver
+         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
          $stmt = $conn->prepare("
         INSERT INTO feeds_rss (nome, url_feed, codigo_canal, velocidade_scroll, cor_texto, cor_fundo, posicao, usuario_upload) 
@@ -111,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    }
 }
 
-// Excluir feed
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $id = (int)$_GET['delete'];
 
@@ -125,7 +122,6 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
    $stmt->close();
 }
 
-// Buscar feeds existentes
 $feeds = [];
 $res = $conn->query("
     SELECT f.*, COUNT(c.id) as total_itens,
@@ -142,7 +138,6 @@ if ($res) {
    }
 }
 
-// Buscar canais disponíveis
 $canais = [];
 $res = $conn->query("SELECT DISTINCT codigo_canal FROM conteudos WHERE ativo = 1 ORDER BY codigo_canal");
 if ($res) {

@@ -7,7 +7,6 @@ if (!isset($_SESSION['logado'])) {
 include "../includes/db.php";
 include "../includes/functions.php";
 
-// Gerenciar conteúdo lateral
 $sidebar_file = null;
 if (isset($_GET['delete_sidebar'])) {
    foreach (glob(SIDEBAR_PATH . '*') as $f) {
@@ -113,14 +112,12 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             </div>
          </div>
 
-         <!-- Estatísticas do Sistema -->
          <div class="card">
             <div class="card-header">
                <h3><i class="fas fa-chart-pie"></i> Estatísticas do Sistema</h3>
             </div>
             <div class="card-body">
                <?php
-               // Estatísticas de conteúdo
                $stats_conteudo = $conn->query("
                   SELECT 
                      COUNT(*) as total_arquivos,
@@ -131,7 +128,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                   WHERE ativo = 1
                ")->fetch_assoc();
 
-               // Estatísticas de RSS
                $stats_rss = $conn->query("
                   SELECT 
                      COUNT(*) as total_feeds,
@@ -211,7 +207,6 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                   ORDER BY codigo_canal
                ");
 
-               // Buscar feeds RSS por canal
                $rss_por_canal = [];
                $rss_query = $conn->query("
                   SELECT codigo_canal, COUNT(*) as total_feeds
@@ -337,12 +332,14 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
                                  $preview = "<video src='../uploads/{$row['arquivo']}' class='preview-video' muted></video>";
                               }
 
+                              $duracao_formatada = formatarDuracao($row['duracao'], $row['tipo']);
+
                               echo "<tr>
                                             <td class='preview-cell'>{$preview}</td>
                                             <td class='filename'>{$row['arquivo']}</td>
                                             <td><span class='channel-badge'>{$row['codigo_canal']}</span></td>
                                             <td><span class='badge badge-" . ($row['tipo'] == 'imagem' ? 'info' : 'warning') . "'>{$row['tipo']}</span></td>
-                                            <td>{$row['duracao']}s</td>
+                                            <td class='duration-cell' data-duration='{$row['duracao']}' data-type='{$row['tipo']}'>{$duracao_formatada}</td>
                                             <td>" . date('d/m/Y H:i', strtotime($row['data_upload'])) . "</td>
                                             <td class='actions'>
                                                 <a href='../tv/index.php?canal={$row['codigo_canal']}' target='_blank' 
@@ -375,6 +372,31 @@ $canal_filtro = isset($_GET['canal']) ? strtoupper(trim($_GET['canal'])) : '';
             input.addEventListener('input', function(e) {
                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
             });
+         });
+
+         const durationCells = document.querySelectorAll('.duration-cell');
+         durationCells.forEach(cell => {
+            const duration = parseInt(cell.dataset.duration);
+            const type = cell.dataset.type;
+
+            if (type === 'video') {
+               const hours = Math.floor(duration / 3600);
+               const minutes = Math.floor((duration % 3600) / 60);
+               const seconds = duration % 60;
+
+               let tooltip = '';
+               if (hours > 0) {
+                  tooltip = `${hours}h ${minutes}m ${seconds}s`;
+               } else {
+                  tooltip = `${minutes}m ${seconds}s`;
+               }
+
+               cell.title = `Duração total: ${tooltip}`;
+               cell.style.cursor = 'help';
+            } else {
+               cell.title = `Tempo de exibição: ${duration} segundo${duration !== 1 ? 's' : ''}`;
+               cell.style.cursor = 'help';
+            }
          });
       });
    </script>

@@ -9,6 +9,7 @@ function iniciarSessao()
       session_start();
    }
 }
+
 function verificarLogin()
 {
    iniciarSessao();
@@ -29,6 +30,7 @@ function verificarLogin()
 
    $_SESSION['ultimo_acesso'] = time();
 }
+
 function fazerLogin($usuario, $senha)
 {
    global $conn;
@@ -61,6 +63,7 @@ function fazerLogin($usuario, $senha)
    $stmt->close();
    return false;
 }
+
 function fazerLogout()
 {
    iniciarSessao();
@@ -73,6 +76,92 @@ function fazerLogout()
    header("Location: index.php");
    exit;
 }
+function obterDuracaoVideo($caminhoArquivo)
+{
+   if (function_exists('shell_exec')) {
+      $output = @shell_exec("ffmpeg -i " . escapeshellarg($caminhoArquivo) . " 2>&1");
+
+      if ($output && preg_match('/Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})/', $output, $matches)) {
+         $horas = (int)$matches[1];
+         $minutos = (int)$matches[2];
+         $segundos = (int)$matches[3];
+         $duracao = ($horas * 3600) + ($minutos * 60) + $segundos;
+
+         if ($duracao > 0) {
+            return $duracao;
+         }
+      }
+   }
+
+   $duracao = obterDuracaoMP4Simples($caminhoArquivo);
+   if ($duracao > 0) {
+      return $duracao;
+   }
+
+   $tamanho = filesize($caminhoArquivo);
+   if ($tamanho > 0) {
+      $estimativa_segundos = max(5, min(300, ($tamanho / (2 * 1024 * 1024)) * 60));
+      return (int)$estimativa_segundos;
+   }
+
+   return 15;
+}
+
+function obterDuracaoMP4Simples($caminhoArquivo)
+{
+   $handle = fopen($caminhoArquivo, 'rb');
+   if (!$handle) {
+      return 0;
+   }
+
+   $duracao = 0;
+   $buffer_size = 8192;
+
+   while (!feof($handle)) {
+      $chunk = fread($handle, $buffer_size);
+
+      if (preg_match('/mvhd.{8,32}/s', $chunk, $matches)) {
+         $mvhd_data = $matches[0];
+
+         for ($i = 4; $i < strlen($mvhd_data) - 8; $i++) {
+            $test_data = substr($mvhd_data, $i, 8);
+            $values = unpack('N*', $test_data);
+
+            if (count($values) >= 2) {
+               $timescale = $values[1];
+               $duration = $values[2];
+
+               if ($timescale > 0 && $timescale <= 96000 && $duration > 0) {
+                  $calculated_duration = (int)($duration / $timescale);
+
+                  if ($calculated_duration >= 1 && $calculated_duration <= 86400) {
+                     fclose($handle);
+                     return $calculated_duration;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   fclose($handle);
+   return 0;
+}
+
+function formatarDuracao($segundos, $tipo = 'video')
+{
+   $segundos = (int)$segundos;
+
+   if ($tipo === 'imagem') {
+      return sprintf('00:%02d', $segundos);
+   }
+
+   $minutos = floor($segundos / 60);
+   $segundos_restantes = $segundos % 60;
+
+   return sprintf('%d:%02d', $minutos, $segundos_restantes);
+}
+
 function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
 {
    global $conn;
@@ -102,10 +191,19 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
    }
 
    $dimensoes = '';
+   $duracao_real = $duracao;
+
    if ($tipo === 'imagem') {
       $info = getimagesize($caminhoCompleto);
       if ($info) {
          $dimensoes = $info[0] . 'x' . $info[1];
+      }
+      $duracao_real = (int)$duracao;
+   } else {
+      $duracao_real = obterDuracaoVideo($caminhoCompleto);
+
+      if ($duracao_real <= 0) {
+         $duracao_real = 30;
       }
    }
 
@@ -123,7 +221,7 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
       $arquivo['name'],
       $tipo,
       $codigo_canal,
-      $duracao,
+      $duracao_real,
       $arquivo['size'],
       $dimensoes,
       $usuarioId
@@ -137,10 +235,12 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
    $conteudoId = $conn->insert_id;
    $stmt->close();
 
-   registrarLog('upload', "Upload do arquivo: {$arquivo['name']} ({$tipo}) - Canal: {$codigo_canal}");
+   $duracao_formatada = formatarDuracao($duracao_real, $tipo);
+   registrarLog('upload', "Upload do arquivo: {$arquivo['name']} ({$tipo}) - Canal: {$codigo_canal} - Duração: {$duracao_formatada}");
 
    return $conteudoId;
 }
+
 function excluirConteudo($id)
 {
    global $conn;
@@ -169,6 +269,7 @@ function excluirConteudo($id)
    $stmt->close();
    return false;
 }
+
 function buscarConteudos($apenasAtivos = true)
 {
    global $conn;
@@ -188,6 +289,7 @@ function buscarConteudos($apenasAtivos = true)
 
    return $conteudos;
 }
+
 function sinalizarAtualizacaoTV()
 {
    $arquivo = TEMP_PATH . 'tv_update.txt';
@@ -197,6 +299,7 @@ function sinalizarAtualizacaoTV()
 
    return true;
 }
+
 function registrarLog($acao, $detalhes = '')
 {
    global $conn;
@@ -214,6 +317,7 @@ function registrarLog($acao, $detalhes = '')
    $stmt->execute();
    $stmt->close();
 }
+
 function buscarConfiguracao($chave, $valorPadrao = null)
 {
    global $conn;
@@ -240,6 +344,7 @@ function buscarConfiguracao($chave, $valorPadrao = null)
    $stmt->close();
    return $valorPadrao;
 }
+
 function salvarConfiguracao($chave, $valor, $tipo = 'string')
 {
    global $conn;
@@ -266,6 +371,7 @@ function salvarConfiguracao($chave, $valor, $tipo = 'string')
 
    return true;
 }
+
 function limparLogsAntigos()
 {
    global $conn;
@@ -281,6 +387,7 @@ function limparLogsAntigos()
 
    return 0;
 }
+
 function sanitizarEntrada($dado, $tipo = 'string')
 {
    switch ($tipo) {
@@ -296,6 +403,7 @@ function sanitizarEntrada($dado, $tipo = 'string')
          return htmlspecialchars(trim($dado), ENT_QUOTES, 'UTF-8');
    }
 }
+
 function gerarTokenCSRF()
 {
    iniciarSessao();
@@ -306,12 +414,14 @@ function gerarTokenCSRF()
 
    return $_SESSION['csrf_token'];
 }
+
 function verificarTokenCSRF($token)
 {
    iniciarSessao();
 
    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
 function processarUploadLateral($arquivo, $descricao = '')
 {
    global $conn;
@@ -329,17 +439,14 @@ function processarUploadLateral($arquivo, $descricao = '')
       throw new Exception('Tipo de arquivo não permitido');
    }
 
-   // Criar nome único para o arquivo
    $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
    $nomeArquivo = 'sidebar_' . time() . '_' . uniqid() . '.' . $extensao;
    $caminhoCompleto = SIDEBAR_PATH . $nomeArquivo;
 
-   // Mover arquivo para pasta de sidebar
    if (!move_uploaded_file($arquivo['tmp_name'], $caminhoCompleto)) {
       throw new Exception('Erro ao salvar arquivo');
    }
 
-   // Obter dimensões se for imagem
    $dimensoes = '';
    if ($tipo === 'imagem') {
       $info = getimagesize($caminhoCompleto);
@@ -350,7 +457,6 @@ function processarUploadLateral($arquivo, $descricao = '')
 
    $usuarioId = $_SESSION['usuario_id'] ?? null;
 
-   // Inserir no banco de dados
    $stmt = $conn->prepare("
         INSERT INTO conteudos_laterais 
         (arquivo, nome_original, tipo, tamanho, dimensoes, usuario_upload, descricao) 
@@ -380,15 +486,10 @@ function processarUploadLateral($arquivo, $descricao = '')
 
    return $conteudoId;
 }
-
-/**
- * Ativa um conteúdo lateral específico
- */
 function ativarConteudoLateral($id)
 {
    global $conn;
 
-   // Verificar se o conteúdo existe
    $stmt = $conn->prepare("SELECT arquivo, nome_original FROM conteudos_laterais WHERE id = ?");
    $stmt->bind_param("i", $id);
    $stmt->execute();
@@ -400,23 +501,19 @@ function ativarConteudoLateral($id)
 
    $stmt->close();
 
-   // Verificar se o arquivo ainda existe
    $caminhoArquivo = SIDEBAR_PATH . $row['arquivo'];
    if (!file_exists($caminhoArquivo)) {
       throw new Exception('Arquivo não encontrado no servidor');
    }
 
-   // Desativar conteúdo lateral atual
    $conn->query("UPDATE conteudos_laterais SET ativo = 0, data_desativacao = NOW() WHERE ativo = 1");
 
-   // Remover arquivos antigos da pasta ativa (manter compatibilidade)
    foreach (glob(SIDEBAR_PATH . '*') as $f) {
       if (is_file($f) && basename($f) !== $row['arquivo']) {
          unlink($f);
       }
    }
 
-   // Ativar o novo conteúdo
    $stmt = $conn->prepare("UPDATE conteudos_laterais SET ativo = 1, data_ativacao = NOW() WHERE id = ?");
    $stmt->bind_param("i", $id);
    $stmt->execute();
@@ -427,10 +524,6 @@ function ativarConteudoLateral($id)
 
    return true;
 }
-
-/**
- * Exclui um conteúdo lateral
- */
 function excluirConteudoLateral($id)
 {
    global $conn;
@@ -445,13 +538,11 @@ function excluirConteudoLateral($id)
       $nomeOriginal = $row['nome_original'];
       $eraAtivo = $row['ativo'];
 
-      // Remover arquivo físico
       $caminhoArquivo = SIDEBAR_PATH . $arquivo;
       if (file_exists($caminhoArquivo)) {
          unlink($caminhoArquivo);
       }
 
-      // Remover do banco
       $deleteStmt = $conn->prepare("DELETE FROM conteudos_laterais WHERE id = ?");
       $deleteStmt->bind_param("i", $id);
       $deleteStmt->execute();
@@ -459,7 +550,6 @@ function excluirConteudoLateral($id)
 
       registrarLog('delete_lateral', "Conteúdo lateral excluído: {$nomeOriginal}");
 
-      // Se era o conteúdo ativo, sinalizar atualização
       if ($eraAtivo) {
          sinalizarAtualizacaoTV();
       }
@@ -472,9 +562,6 @@ function excluirConteudoLateral($id)
    return false;
 }
 
-/**
- * Busca todos os conteúdos laterais
- */
 function buscarConteudosLaterais($apenasAtivos = false)
 {
    global $conn;
@@ -499,9 +586,6 @@ function buscarConteudosLaterais($apenasAtivos = false)
    return $conteudos;
 }
 
-/**
- * Busca o conteúdo lateral ativo
- */
 function buscarConteudoLateralAtivo()
 {
    global $conn;
@@ -516,9 +600,6 @@ function buscarConteudoLateralAtivo()
    return $conteudo;
 }
 
-/**
- * Atualiza descrição de um conteúdo lateral
- */
 function atualizarDescricaoLateral($id, $descricao)
 {
    global $conn;
@@ -535,9 +616,6 @@ function atualizarDescricaoLateral($id, $descricao)
    return $result;
 }
 
-/**
- * Desativa todos os conteúdos laterais
- */
 function desativarTodosConteudosLaterais()
 {
    global $conn;
@@ -551,11 +629,11 @@ function desativarTodosConteudosLaterais()
 
    return $result;
 }
+
 function monitorarUploadGrande($tamanho_arquivo, $nome_arquivo)
 {
    global $conn;
 
-   // Se arquivo for maior que 60MB, registrar para monitoramento
    if ($tamanho_arquivo > (60 * 1024 * 1024)) {
       $stmt = $conn->prepare("
 INSERT INTO logs_sistema

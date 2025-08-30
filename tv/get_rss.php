@@ -6,22 +6,12 @@ header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 include "../includes/db.php";
 include "../includes/functions.php";
 
-// Função para limpar texto RSS de caracteres especiais
 function limparTextoRSS($texto)
 {
-   // Remove caracteres especiais comuns em RSS
    $texto = str_replace(['•', '●', '◦', '▪', '▫', '‣'], '', $texto);
-
-   // Remove múltiplos espaços e quebras de linha
    $texto = preg_replace('/\s+/', ' ', $texto);
-
-   // Remove caracteres de controle
    $texto = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $texto);
-
-   // Limpa HTML entities
    $texto = html_entity_decode($texto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-   // Remove tags HTML restantes
    $texto = strip_tags($texto);
 
    return trim($texto);
@@ -39,8 +29,6 @@ try {
    if (empty($codigo_canal)) {
       throw new Exception('Código de canal não especificado');
    }
-
-   // Debug - verificar se existem feeds
    $debug_stmt = $conn->prepare("SELECT COUNT(*) as total FROM feeds_rss WHERE ativo = 1");
    $debug_stmt->execute();
    $debug_result = $debug_stmt->get_result();
@@ -48,8 +36,6 @@ try {
    $debug_stmt->close();
 
    error_log("Total feeds ativos: " . $total_feeds);
-
-   // Buscar feeds para o canal
    $sql = "
         SELECT f.*, COUNT(c.id) as total_itens
         FROM feeds_rss f
@@ -70,8 +56,6 @@ try {
    $stmt->close();
 
    error_log("Feeds encontrados para canal $codigo_canal: " . count($feeds_encontrados));
-
-   // Buscar itens RSS para o canal
    $sql_itens = "
         SELECT c.*, f.nome as feed_nome, f.velocidade_scroll, f.cor_texto, f.cor_fundo, f.posicao
         FROM cache_rss c
@@ -88,17 +72,12 @@ try {
 
    $rss_data = [];
    while ($row = $result->fetch_assoc()) {
-      // Limpar e formatar texto
       $titulo_limpo = limparTextoRSS($row['titulo']);
       $descricao_limpa = limparTextoRSS($row['descricao']);
-
-      // Formatar texto para exibição
       $texto_formatado = $titulo_limpo;
       if (!empty($descricao_limpa) && strlen($titulo_limpo) < 100) {
          $texto_formatado .= " - " . $descricao_limpa;
       }
-
-      // Limitar tamanho do texto
       if (strlen($texto_formatado) > 300) {
          $texto_formatado = substr($texto_formatado, 0, 297) . '...';
       }
@@ -121,8 +100,6 @@ try {
    $stmt->close();
 
    error_log("Itens RSS encontrados: " . count($rss_data));
-
-   // Agrupar por posição
    $response = [
       'canal' => $codigo_canal,
       'total_itens' => count($rss_data),

@@ -69,7 +69,7 @@ function handleFileSelect(e) {
 }
 
 function validateFile(file) {
-   const maxSize = 83886080; // 50MB
+   const maxSize = 83886080;
    const allowedTypes = [
       "image/jpeg",
       "image/jpg",
@@ -164,7 +164,6 @@ function handleFormSubmit(e) {
    const submitBtn = document.getElementById("submitBtn");
    const progressContainer = document.getElementById("progressContainer");
 
-   // Validações
    if (!fileInput.files[0]) {
       showAlert("Por favor, selecione um arquivo", "error");
       return;
@@ -178,14 +177,12 @@ function handleFormSubmit(e) {
 
    const formData = new FormData(e.target);
 
-   // Estado de loading
    submitBtn.disabled = true;
    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
    progressContainer.classList.remove("hidden");
 
    const xhr = new XMLHttpRequest();
 
-   // Progress do upload
    xhr.upload.addEventListener("progress", function (e) {
       if (e.lengthComputable) {
          const percentComplete = (e.loaded / e.total) * 100;
@@ -193,7 +190,6 @@ function handleFormSubmit(e) {
       }
    });
 
-   // Sucesso
    xhr.addEventListener("load", function () {
       if (xhr.status === 200) {
          showAlert("Arquivo enviado com sucesso!", "success");
@@ -207,7 +203,6 @@ function handleFormSubmit(e) {
       resetUploadState();
    });
 
-   // Erro
    xhr.addEventListener("error", function () {
       showAlert("Erro de conexão ao enviar arquivo", "error");
       resetUploadState();
@@ -240,7 +235,6 @@ function removeFile() {
    resetFileInput();
    hideFilePreview();
 
-   // Restaurar campo de duração
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
 
@@ -260,7 +254,6 @@ function resetForm() {
    hideFilePreview();
    resetFileInput();
 
-   // Restaurar campo de duração
    const durationGroup = document.getElementById("durationGroup");
    const durationInput = document.getElementById("duracao");
 
@@ -271,7 +264,6 @@ function resetForm() {
 }
 
 function showAlert(message, type = "info") {
-   // Remover alertas existentes
    const existingAlerts = document.querySelectorAll(".alert-dynamic");
    existingAlerts.forEach((alert) => alert.remove());
 
@@ -295,7 +287,6 @@ function showAlert(message, type = "info") {
    const content = document.querySelector(".content");
    content.insertBefore(alert, content.firstChild);
 
-   // Auto-remover após 5 segundos
    setTimeout(() => {
       if (alert.parentNode) {
          alert.remove();
@@ -323,7 +314,6 @@ function getFileTypeLabel(mimeType) {
    return "Arquivo";
 }
 
-// CSS adicional para alertas dinâmicos
 const additionalCSS = `
 .alert-dynamic {
     position: relative;
