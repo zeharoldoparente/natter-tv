@@ -69,7 +69,7 @@ function handleFileSelect(e) {
 }
 
 function validateFile(file) {
-   const maxSize = 52428800; // 50MB
+   const maxSize = 83886080; // 50MB
    const allowedTypes = [
       "image/jpeg",
       "image/jpg",
@@ -82,7 +82,7 @@ function validateFile(file) {
    ];
 
    if (file.size > maxSize) {
-      showAlert("Arquivo muito grande! Máximo permitido: 50MB", "error");
+      showAlert("Arquivo muito grande! Máximo permitido: 80MB", "error");
       resetFileInput();
       return false;
    }

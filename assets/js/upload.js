@@ -67,7 +67,7 @@ function handleFileSelect(e) {
 }
 
 function validateFile(file) {
-   const maxSize = 52428800;
+   const maxSize = 83886080;
    const allowedTypes = [
       "image/jpeg",
       "image/jpg",

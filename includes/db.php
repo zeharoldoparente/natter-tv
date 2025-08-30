@@ -5,7 +5,7 @@ define('DB_PASS', '');
 define('DB_NAME', 'tv_corporativa');
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
 define('TEMP_PATH', __DIR__ . '/../temp/');
-define('MAX_FILE_SIZE', 50 * 1024 * 1024);
+define('MAX_FILE_SIZE', 80 * 1024 * 1024);
 define('SIDEBAR_PATH', __DIR__ . '/../uploads/sidebar/');
 define('SIDEBAR_WEB_PATH', '../uploads/sidebar/');
 
@@ -22,7 +22,7 @@ if (!defined('SIDEBAR_WEB_PATH')) {
 
 if (!defined('MAX_FILE_SIZE')) {
    // Tamanho máximo para upload (50MB)
-   define('MAX_FILE_SIZE', 52428800);
+   define('MAX_FILE_SIZE', 83886080);
 }
 
 if (!defined('UPLOAD_PATH')) {

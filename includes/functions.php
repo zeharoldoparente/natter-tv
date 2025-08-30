@@ -81,7 +81,7 @@ function processarUpload($arquivo, $duracao = 5, $codigo_canal = '0000')
       throw new Exception('Erro no upload do arquivo: ' . $arquivo['error']);
    }
    if ($arquivo['size'] > MAX_FILE_SIZE) {
-      throw new Exception('Arquivo muito grande. Máximo: ' . formatFileSize(MAX_FILE_SIZE));
+      throw new Exception('Arquivo muito grande. Máximo: ' . formatFileSize(MAX_FILE_SIZE) . ' (80MB)');
    }
    $tipo = getFileType($arquivo['name']);
    if ($tipo === 'desconhecido') {
@@ -550,4 +550,24 @@ function desativarTodosConteudosLaterais()
    }
 
    return $result;
+}
+function monitorarUploadGrande($tamanho_arquivo, $nome_arquivo)
+{
+   global $conn;
+
+   // Se arquivo for maior que 60MB, registrar para monitoramento
+   if ($tamanho_arquivo > (60 * 1024 * 1024)) {
+      $stmt = $conn->prepare("
+INSERT INTO logs_sistema
+(acao, detalhes, ip_address, data_log)
+VALUES ('upload_grande', ?, ?, NOW())
+");
+
+      $detalhes = "Upload de arquivo grande: {$nome_arquivo} - " . formatFileSize($tamanho_arquivo);
+      $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+      $stmt->bind_param("ss", $detalhes, $ip);
+      $stmt->execute();
+      $stmt->close();
+   }
 }
